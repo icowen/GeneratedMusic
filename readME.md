@@ -4,3 +4,5 @@
 <li>In environment variables, make sure <code>path</code> is linked to chromedriver.
 <li>In MidiScraper, put the path to your chromedriver in <code>driver = webdriver.Chrome("your path to chromedriver")</code>
 
+
+
