@@ -230,11 +230,13 @@ class NeuralNet:
             if self.neurons.index(layer) != 0:
                 for neuron in layer:
                     self.get_new_sum_and_activation(neuron)
-        # y_predicted = max(neuron.get_activation() for neuron in self.get_output_layer())
+        y_predicted = max(neuron.get_activation() for neuron in self.get_output_layer())
         output = []
+        prediction = 0
         for neuron in self.get_output_layer():
             output.append(neuron.get_activation())
-        return output
+        print(f'Output probability vector: {output}')
+        return y_predicted
 
     def train(self, input_data: np.ndarray, output_data: np.ndarray, epochs=10000):
         print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
@@ -252,17 +254,12 @@ class NeuralNet:
                 for i in range(len(y)):
                     if y[i] == 1:
                         correct_index = i
-                # print(f'{x}: {correct_index}')
                 output_neuron = self.get_output_layer()[correct_index]
-                correct_output_neuron_activation = output_neuron.get_activation()
-                # derivative_of_loss = -1 / correct_output_neuron_activation
-                #
-                y_predicted = correct_output_neuron_activation
+                y_predicted = output_neuron.get_activation()
 
-                if y[correct_index] == 1:
-                    derivative_of_loss = -1 / y_predicted
-                else:
-                    derivative_of_loss = 1 / (1 - y_predicted)
+                # derivative_of_loss = log_derivative(y_predicted)
+                # derivative_of_loss = mean_squared_error_derivative(y[correct_index], y_predicted)
+                derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
 
                 output_probabilities = []
                 for output_neuron in self.get_output_layer():
@@ -273,14 +270,9 @@ class NeuralNet:
                     change_in_bias = derivative_of_loss * sigmoid_derivative(output_neuron.get_sum())
                     output_neuron.add_change_in_bias(change_in_bias)
                     self.calculate_partial_derivatives_for_weights(output_neuron)
-                # print(f'output probabilities: {output_probabilities}')
 
                 # output_neuron = self.neurons[self.number_of_layers - 1][0]
                 # y_predicted = output_neuron.get_activation()
-
-                # derivative_of_loss = -1 / correct_output_neuron_activation
-
-                # derivative_of_loss = -2 * (y[0] - y_predicted)
 
                 self.calculate_partial_derivatives()
                 self.update_net()
@@ -345,6 +337,21 @@ class NeuralNet:
         if not len(output_data[0]) == len(self.get_output_layer()):
             raise ValueError(f'output_data ({len(output_data[0])}) '
                              f'is not the same length as number of output nodes ({len(self.get_output_layer())})')
+
+
+def log_derivative(y_predicted):
+    return -1 / y_predicted
+
+
+def mean_squared_error_derivative(y_true, y_predicted):
+    return -2 * (y_true - y_predicted)
+
+
+def log_loss_derivative(y_true, y_predicted):
+    if y_true == 1:
+        return -1 / y_predicted
+    else:
+        return 1 / (1 - y_predicted)
 
 
 def logloss(true_label, predicted_prob):
@@ -594,7 +601,7 @@ def test_for_multiple_outputs():
     x_test = np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1], [0, 1, 0]])
     y_test = np.array([[0, 0, 1], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 1, 0]])
     net = NeuralNet(3, 3, 3, 3)
-    net.train(x_test, y_test, 1)
+    net.train(x_test, y_test, 10000)
     test = [1, 0, 1]
     test1 = [0, 1, 1]
     test2 = [1, 1, 1]
@@ -618,6 +625,6 @@ def test_for_multiple_outputs():
 # run_five_neuron_net_with_two_hidden_for_OR()
 # run_seven_neuron_net_with_four_hidden_for_AND()
 # run_seven_neuron_net_with_four_hidden_for_OR()
-run_five_neuron_net_with_two_hidden_for_MOD2()
+# run_five_neuron_net_with_two_hidden_for_MOD2()
 # run_seven_neuron_net_with_four_hidden_for_MOD2()
-# test_for_multiple_outputs()
+test_for_multiple_outputs()
