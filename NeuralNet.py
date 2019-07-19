@@ -221,13 +221,13 @@ class NeuralNet:
             if self.neurons.index(layer) != 0:
                 for neuron in layer:
                     self.get_new_sum_and_activation(neuron)
-        output = []
-        for neuron in self.get_output_layer():
-            output.append(neuron.get_activation())
-        output = normalize(output)
-        y_predicted = output.index(max(output))
-        print(f'Output probability vector: {output}')
-        return y_predicted
+        # output = []
+        # for neuron in self.get_output_layer():
+        #     output.append(neuron.get_activation())
+        # output = normalize(output)
+        # y_predicted = output.index(max(output))
+        # print(f'Output probability vector: {output}')
+        return self.get_output_layer()[0].get_activation()
 
     def train(self, input_data: np.ndarray, output_data: np.ndarray, epochs=10000):
         print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
@@ -245,18 +245,18 @@ class NeuralNet:
                 for i in range(len(y)):
                     if y[i] == 1:
                         correct_index = i
-                print(correct_index)
+                # print(correct_index)
 
                 output_probabilities = []
-                for neuron in self.get_output_layer():
+                for neuron in self.neurons[self.number_of_layers - 2]:
                     output_probabilities.append(neuron.get_activation())
                 output_probabilities = normalize(output_probabilities)
-                y_predicted = output_probabilities[correct_index]
-                print(f'y_pred: {y_predicted}')
+                y_predicted = self.get_output_layer()[0].get_activation()
+                # print(f'y_pred: {y_predicted}')
 
-                derivative_of_loss = log_derivative(y_predicted)
+                # derivative_of_loss = log_derivative(y_predicted)
                 # derivative_of_loss = mean_squared_error_derivative(y[correct_index], y_predicted)
-                # derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
+                derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
 
                 for output_neuron in self.get_output_layer():
                     output_neuron.add_change_in_activation(derivative_of_loss)
@@ -601,7 +601,7 @@ def run_seven_neuron_net_with_four_hidden_for_MOD2():
 def test_for_multiple_outputs():
     x_test = np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1], [0, 1, 0]])
     y_test = np.array([[0, 0, 1], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 1, 0]])
-    net = NeuralNet(3, 3, 2, 3)
+    net = NeuralNet(3, 4, 3, 1)
     net.train(x_test, y_test, 5)
     test = [1, 0, 1]
     test1 = [0, 1, 1]
@@ -628,4 +628,4 @@ def test_for_multiple_outputs():
 # run_seven_neuron_net_with_four_hidden_for_OR()
 # run_five_neuron_net_with_two_hidden_for_MOD2()
 # run_seven_neuron_net_with_four_hidden_for_MOD2()
-test_for_multiple_outputs()
+# test_for_multiple_outputs()
