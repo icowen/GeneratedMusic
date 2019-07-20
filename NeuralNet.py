@@ -1,6 +1,6 @@
 import random
-import numpy as np
 from sklearn.metrics import log_loss
+from Helpers import *
 
 
 class Weight:
@@ -166,6 +166,134 @@ class NeuralNet:
                         neuron_in_next_layer.add_weight_to_this_neuron(weight)
                         self.weights.append(weight)
 
+    @staticmethod
+    def get_new_sum_and_activation(neuron):
+        new_sum_value = 0
+        for weight in neuron.weights['weights_to_this_neuron']:
+            activation = weight.from_neuron.get_activation()
+            new_sum_value += weight.weight * activation
+        new_sum_value += neuron.get_bias()
+        neuron.set_sum(new_sum_value)
+        neuron.set_activation(sigmoid(new_sum_value))
+
+    def predict(self, input_data):
+        for i in range(len(input_data)):
+            self.neurons[0][i].set_activation(input_data[i])
+        for layer in self.neurons:
+            if self.neurons.index(layer) != 0:
+                for neuron in layer:
+                    self.get_new_sum_and_activation(neuron)
+        output = []
+        for neuron in self.get_output_layer():
+            output.append(neuron.get_activation())
+        # output = normalize(output)
+        # y_predicted = output.index(max(output))
+        # print(f'Output probability vector: {output}')
+        return self.get_output_layer()[0].get_activation()
+        # return output
+
+    def train(self, input_data: np.ndarray, output_data: np.ndarray, epochs=10000):
+        print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
+        self.check_for_valid_input(input_data, output_data)
+        for epoch in range(epochs):
+            for x, y in zip(input_data, output_data):
+                for i in range(len(x)):
+                    self.neurons[0][i].set_activation(x[i])
+                for layer in self.neurons:
+                    if self.neurons.index(layer) != 0:
+                        for neuron in layer:
+                            self.get_new_sum_and_activation(neuron)
+
+                correct_index = 0
+                for i in range(len(y)):
+                    if y[i] == 1:
+                        correct_index = i
+
+                output_probabilities = []
+                for neuron in self.neurons[self.number_of_layers - 2]:
+                    output_probabilities.append(neuron.get_activation())
+                # output_probabilities = normalize(output_probabilities)
+                y_predicted = self.get_output_layer()[0].get_activation()
+                # print(f'y_pred: {y_predicted}')
+
+                # derivative_of_loss = log_derivative(y_predicted)
+                # derivative_of_loss = mean_squared_error_derivative(y[correct_index], y_predicted)
+                derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
+
+                for output_neuron in self.get_output_layer():
+                    output_neuron.add_change_in_activation(derivative_of_loss)
+                    change_in_bias = derivative_of_loss * sigmoid_derivative(output_neuron.get_sum())
+                    output_neuron.add_change_in_bias(change_in_bias)
+                    self.calculate_partial_derivatives_for_weights(output_neuron)
+
+                # print(normalize(output_probabilities))
+
+                self.calculate_partial_derivatives()
+                self.update_net()
+
+            # if epoch % 10 == 0:
+            #     y_predictions = np.apply_along_axis(self.predict, 1, input_data)
+            #     self.print_loss_function(output_data, y_predictions, epoch)
+        self.print_net()
+
+    def update_net(self):
+        for layer in self.neurons:
+            for neuron in layer:
+                for weight in neuron.weights["weights_from_this_neuron"]:
+                    weight.update()
+                neuron.update()
+
+    def calculate_partial_derivatives(self):
+        layer_index = self.number_of_layers - 2
+        while layer_index > 0:
+            for neuron in self.neurons[layer_index]:
+                self.calculate_partial_derivative_for_bias_and_activation(neuron)
+                self.calculate_partial_derivatives_for_weights(neuron)
+            layer_index -= 1
+
+    @staticmethod
+    def calculate_partial_derivative_for_bias_and_activation(neuron):
+        new_bias_value = sigmoid_derivative(neuron.get_sum())
+        bias_values_from_stuff_to_the_right = 0
+        dl_da = 0
+        for from_weight in neuron.weights["weights_from_this_neuron"]:
+            bias_values_from_stuff_to_the_right += from_weight.to_neuron.get_change_in_activation() * \
+                                                   sigmoid_derivative(from_weight.to_neuron.get_sum()) * \
+                                                   from_weight.weight
+            dl_da += from_weight.to_neuron.get_change_in_activation() * \
+                     sigmoid_derivative(from_weight.to_neuron.get_sum()) * \
+                     from_weight.weight
+        neuron.add_change_in_activation(dl_da)
+        if bias_values_from_stuff_to_the_right != 0:
+            new_bias_value *= bias_values_from_stuff_to_the_right
+            neuron.add_change_in_bias(new_bias_value)
+
+    @staticmethod
+    def calculate_partial_derivatives_for_weights(neuron):
+        for to_weight in neuron.weights["weights_to_this_neuron"]:
+            new_weight_value = sigmoid_derivative(neuron.get_sum()) * \
+                               to_weight.from_neuron.get_activation() * \
+                               neuron.get_change_in_activation()
+            to_weight.add_change(new_weight_value)
+
+    @staticmethod
+    def print_loss_function(output_data, y_predictions, epoch):
+        loss_function = log_loss(output_data, y_predictions)
+        print(f"Epoch {epoch} loss_function: {round(loss_function, 3)}")
+
+    def get_output_layer(self):
+        return self.neurons[self.number_of_layers - 1]
+
+    def check_for_valid_input(self, input_data, output_data):
+        if not isinstance(input_data, np.ndarray):
+            raise TypeError(f'Use a list for input data instead of {type(input_data)}')
+        if not len(input_data[0]) == len(self.neurons[0]):
+            raise ValueError(f'input_data ({len(input_data[0])}) '
+                             f'is not the same length as number of input nodes ({len(self.neurons[0])})')
+        if not len(output_data[0]) == len(self.get_output_layer()):
+            raise ValueError(f'output_data ({len(output_data[0])}) '
+                             f'is not the same length as number of output nodes ({len(self.get_output_layer())})')
+
     def check_for_correct_number_of_output_neurons(self, output_neuron_biases):
         if output_neuron_biases and not len(output_neuron_biases) == self.number_of_output_neurons:
             raise ValueError(f'number of biases for hidden nodes ({len(output_neuron_biases)}) '
@@ -204,373 +332,12 @@ class NeuralNet:
                 for weight in neuron.weights["weights_from_this_neuron"]:
                     print(weight)
 
-    @staticmethod
-    def get_new_sum_and_activation(neuron):
-        new_sum_value = 0
-        for weight in neuron.weights['weights_to_this_neuron']:
-            activation = weight.from_neuron.get_activation()
-            new_sum_value += weight.weight * activation
-        new_sum_value += neuron.get_bias()
-        neuron.set_sum(new_sum_value)
-        neuron.set_activation(sigmoid(new_sum_value))
-
-    def predict(self, input_data):
-        for i in range(len(input_data)):
-            self.neurons[0][i].set_activation(input_data[i])
-        for layer in self.neurons:
-            if self.neurons.index(layer) != 0:
-                for neuron in layer:
-                    self.get_new_sum_and_activation(neuron)
-        # output = []
-        # for neuron in self.get_output_layer():
-        #     output.append(neuron.get_activation())
-        # output = normalize(output)
-        # y_predicted = output.index(max(output))
-        # print(f'Output probability vector: {output}')
-        return self.get_output_layer()[0].get_activation()
-
-    def train(self, input_data: np.ndarray, output_data: np.ndarray, epochs=10000):
-        print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
-        self.check_for_valid_input(input_data, output_data)
-        for epoch in range(epochs):
-            for x, y in zip(input_data, output_data):
-                for i in range(len(x)):
-                    self.neurons[0][i].set_activation(x[i])
-                for layer in self.neurons:
-                    if self.neurons.index(layer) != 0:
-                        for neuron in layer:
-                            self.get_new_sum_and_activation(neuron)
-
-                correct_index = 0
-                for i in range(len(y)):
-                    if y[i] == 1:
-                        correct_index = i
-                # print(correct_index)
-
-                output_probabilities = []
-                for neuron in self.neurons[self.number_of_layers - 2]:
-                    output_probabilities.append(neuron.get_activation())
-                output_probabilities = normalize(output_probabilities)
-                y_predicted = self.get_output_layer()[0].get_activation()
-                # print(f'y_pred: {y_predicted}')
-
-                # derivative_of_loss = log_derivative(y_predicted)
-                # derivative_of_loss = mean_squared_error_derivative(y[correct_index], y_predicted)
-                derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
-
-                for output_neuron in self.get_output_layer():
-                    output_neuron.add_change_in_activation(derivative_of_loss)
-                    change_in_bias = derivative_of_loss * sigmoid_derivative(output_neuron.get_sum())
-                    output_neuron.add_change_in_bias(change_in_bias)
-                    self.calculate_partial_derivatives_for_weights(output_neuron)
-
-                # print(normalize(output_probabilities))
-
-                self.calculate_partial_derivatives()
-                self.update_net()
-
-            # if epoch % 10 == 0:
-            #     y_predictions = np.apply_along_axis(self.predict, 1, input_data)
-            #     self.print_loss_function(output_data, y_predictions, epoch)
-        self.print_net()
-
-    def update_net(self):
-        for layer in self.neurons:
-            for neuron in layer:
-                for weight in neuron.weights["weights_from_this_neuron"]:
-                    weight.update()
-                neuron.update()
-
-    def calculate_partial_derivatives(self):
-        for layer in self.neurons[:self.number_of_layers - 1]:
-            for neuron in layer:
-                self.calculate_partial_derivative_for_bias_and_activation(neuron)
-                self.calculate_partial_derivatives_for_weights(neuron)
-
-    @staticmethod
-    def calculate_partial_derivative_for_bias_and_activation(neuron):
-        new_bias_value = sigmoid_derivative(neuron.get_sum())
-        bias_values_from_stuff_to_the_right = 0
-        dl_da = 0
-        for from_weight in neuron.weights["weights_from_this_neuron"]:
-            bias_values_from_stuff_to_the_right += from_weight.to_neuron.get_change_in_activation() * \
-                                                   sigmoid_derivative(from_weight.to_neuron.get_sum()) * \
-                                                   from_weight.weight
-            dl_da += from_weight.to_neuron.get_change_in_activation() * \
-                     sigmoid_derivative(from_weight.to_neuron.get_sum()) * \
-                     from_weight.weight
-        neuron.add_change_in_activation(dl_da)
-        if bias_values_from_stuff_to_the_right != 0:
-            new_bias_value *= bias_values_from_stuff_to_the_right
-            neuron.add_change_in_bias(new_bias_value)
-
-    @staticmethod
-    def calculate_partial_derivatives_for_weights(neuron):
-        for to_weight in neuron.weights["weights_to_this_neuron"]:
-            new_weight_value = sigmoid_derivative(neuron.get_sum()) * \
-                               to_weight.from_neuron.get_activation() * \
-                               neuron.get_change_in_activation()
-            to_weight.add_change(new_weight_value)
-
-    @staticmethod
-    def print_loss_function(output_data, y_predictions, epoch):
-        loss_function = log_loss(output_data, y_predictions)
-        # print(f"Epoch {epoch} loss_function: {round(loss_function, 3)}")
-
-    def get_output_layer(self):
-        return self.neurons[self.number_of_layers - 1]
-
-    def check_for_valid_input(self, input_data, output_data):
-        if not isinstance(input_data, np.ndarray):
-            raise TypeError(f'Use a list for input data instead of {type(input_data)}')
-        if not len(input_data[0]) == len(self.neurons[0]):
-            raise ValueError(f'input_data ({len(input_data[0])}) '
-                             f'is not the same length as number of input nodes ({len(self.neurons[0])})')
-        if not len(output_data[0]) == len(self.get_output_layer()):
-            raise ValueError(f'output_data ({len(output_data[0])}) '
-                             f'is not the same length as number of output nodes ({len(self.get_output_layer())})')
-
-
-def normalize(output_probabilities):
-    total = sum(output_probabilities)
-
-    def get_new_p(p):
-        return p/total
-
-    return list(map(get_new_p, output_probabilities))
-
-
-def log_derivative(y_predicted):
-    return -1 / y_predicted
-
-
-def mean_squared_error_derivative(y_true, y_predicted):
-    return -2 * (y_true - y_predicted)
-
-
-def log_loss_derivative(y_true, y_predicted):
-    if y_true == 1:
-        return -1 / y_predicted
-    else:
-        return 1 / (1 - y_predicted)
-
-
-def logloss(true_label, predicted_prob):
-    if true_label == 1:
-        return -np.log(predicted_prob)
-    else:
-        return -np.log(1 - predicted_prob)
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-
-def sigmoid_derivative(x):
-    return sigmoid(x) * (1 - sigmoid(x))
-
-
-def mse_loss(y_true, y_pred):
-    return ((y_true - y_pred) ** 2).mean()
-
-
-def run_two_neuron_net_for_EQUALS():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[1], [0]])
-    net = NeuralNet(1, 2, 1)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR EQUALS WITH ZERO HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 1")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 0")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 1")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 0")
-
-
-def run_two_neuron_net_for_NOT():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[0], [1]])
-    net = NeuralNet(1, 2, 1)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR NOT WITH ZERO HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 0")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 1")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 0")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 1")
-
-
-def run_three_neuron_net_with_one_hidden_for_EQUALS():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[1], [0]])
-    net = NeuralNet(1, 3, 1)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR EQUALS WITH 1 HIDDEN NEURON-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 1")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 0")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 1")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 0")
-
-
-def run_three_neuron_net_with_one_hidden_for_NOT():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[0], [1]])
-    net = NeuralNet(1, 3, 1)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR NOT WITH ONE HIDDEN NEURON-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 0")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 1")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 0")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 1")
-
-
-def run_four_neuron_net_with_two_hidden_for_EQUALS():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[1], [0]])
-    net = NeuralNet(1, 3, 2)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR EQUALS WITH 2 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 1")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 0")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 1")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 0")
-
-
-def run_four_neuron_net_with_two_hidden_for_NOT():
-    x_test = np.array([[1], [0]])
-    y_test = np.array([[0], [1]])
-    net = NeuralNet(1, 3, 2)
-    net.train(x_test, y_test)
-    test = [1]
-    test1 = [0]
-    test2 = [1]
-    test3 = [0]
-    print('\n\n-----------PREDICTIONS FOR NOT WITH 2 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: 0")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: 1")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: 0")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: 1")
-
-
-def run_three_neuron_net_with_zero_hidden_for_AND():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[0], [0], [0], [1]])
-    net = NeuralNet(2, 2, 2)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR AND WITH ZERO HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {0}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {0}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
-
-def run_five_neuron_net_with_two_hidden_for_AND():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[0], [0], [0], [1]])
-    net = NeuralNet(2, 3, 2)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR AND WITH 2 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {0}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {0}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
-
-def run_three_neuron_net_with_zero_hidden_for_OR():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[1], [0], [1], [1]])
-    net = NeuralNet(2, 2, 2)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR OR WITH ZERO HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {1}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {1}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
-
-def run_five_neuron_net_with_two_hidden_for_OR():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[1], [0], [1], [1]])
-    net = NeuralNet(2, 3, 2)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR OR WITH 2 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {1}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {1}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
-
-def run_seven_neuron_net_with_four_hidden_for_AND():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[0], [0], [0], [1]])
-    net = NeuralNet(2, 3, 4)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR AND WITH 4 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {0}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {0}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
-
-def run_seven_neuron_net_with_four_hidden_for_OR():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[1], [0], [1], [1]])
-    net = NeuralNet(2, 3, 4)
-    net.train(x_test, y_test)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR OR WITH 4 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {1}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {1}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
-
 
 def run_five_neuron_net_with_two_hidden_for_MOD2():
     x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[1], [0], [1], [0]])
-    net = NeuralNet(2, 3, 2)
-    net.train(x_test, y_test, 20000)
+    y_test = np.array([[0, 1], [1, 0], [0, 1], [1, 0]])
+    net = NeuralNet(2, 4, 2)
+    net.train(x_test, y_test, 1000)
     test = [1, 0]
     test1 = [0, 1]
     test2 = [1, 1]
@@ -582,27 +349,27 @@ def run_five_neuron_net_with_two_hidden_for_MOD2():
     print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
 
 
-def run_seven_neuron_net_with_four_hidden_for_MOD2():
-    x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
-    y_test = np.array([[1], [0], [1], [0]])
-    net = NeuralNet(2, 3, 4)
-    net.train(x_test, y_test, 20000)
-    test = [1, 0]
-    test1 = [0, 1]
-    test2 = [1, 1]
-    test3 = [0, 0]
-    print('\n\n-----------PREDICTIONS FOR MOD 2 WITH 4 HIDDEN NEURONS-----------')
-    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {1}")
-    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {1}")
-    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {0}")
-    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
+def test_for_multiple_inputs():
+    x_test = np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1], [0, 1, 0]])
+    y_test = np.array([[0], [1], [0], [1], [1]])
+    net = NeuralNet(3, 4, 3)
+    net.train(x_test, y_test, 50000)
+    test = [1, 0, 1]
+    test1 = [0, 1, 1]
+    test2 = [1, 1, 1]
+    test3 = [0, 0, 1]
+    print('\n\n-----------PREDICTIONS FOR MOD 2 WITH 2 HIDDEN NEURONS-----------')
+    print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {0}")
+    print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {0}")
+    print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {1}")
+    print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {1}")
 
 
 def test_for_multiple_outputs():
     x_test = np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1], [0, 1, 0]])
     y_test = np.array([[0, 0, 1], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 1, 0]])
-    net = NeuralNet(3, 4, 3, 1)
-    net.train(x_test, y_test, 5)
+    net = NeuralNet(3, 4, 3, 3)
+    net.train(x_test, y_test)
     test = [1, 0, 1]
     test1 = [0, 1, 1]
     test2 = [1, 1, 1]
@@ -613,19 +380,6 @@ def test_for_multiple_outputs():
     print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {[1, 0, 0]}")
     print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {[0, 0, 1]}")
 
-
-# run_two_neuron_net_for_EQUALS()
-# run_two_neuron_net_for_NOT()
-# run_three_neuron_net_with_one_hidden_for_EQUALS()
-# run_three_neuron_net_with_one_hidden_for_NOT()
-# run_four_neuron_net_with_two_hidden_for_EQUALS()
-# run_four_neuron_net_with_two_hidden_for_NOT()
-# run_three_neuron_net_with_zero_hidden_for_AND()
-# run_five_neuron_net_with_two_hidden_for_AND()
-# run_three_neuron_net_with_zero_hidden_for_OR()
-# run_five_neuron_net_with_two_hidden_for_OR()
-# run_seven_neuron_net_with_four_hidden_for_AND()
-# run_seven_neuron_net_with_four_hidden_for_OR()
 # run_five_neuron_net_with_two_hidden_for_MOD2()
-# run_seven_neuron_net_with_four_hidden_for_MOD2()
+# test_for_multiple_inputs()
 # test_for_multiple_outputs()
