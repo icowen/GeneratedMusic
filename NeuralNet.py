@@ -101,12 +101,14 @@ class NeuralNet:
                  number_of_output_neurons: int = 1,
                  hidden_neuron_biases: list = None,
                  output_neuron_biases: list = None,
-                 weights=None):
+                 weights=None,
+                 activation_function=ActivationFunction.LOG_LOSS):
         self.neurons = []
         self.weights = []
         self.number_of_layers = number_of_layers
         self.number_of_output_neurons = number_of_output_neurons
         self.number_of_neurons_per_layer = number_of_neurons_per_layer
+        self.activation_function = activation_function
         self.number_of_neurons = number_of_input_neurons + \
                                  (number_of_layers - 2) * number_of_neurons_per_layer + \
                                  number_of_output_neurons
@@ -119,6 +121,7 @@ class NeuralNet:
         self.set_output_neurons(output_neuron_biases)
 
         self.set_weight_connections(weights)
+        self.check_activation_function(activation_function)
 
         self.print_net()
 
@@ -167,6 +170,11 @@ class NeuralNet:
                         self.weights.append(weight)
 
     @staticmethod
+    def check_activation_function(activation_function):
+        if not isinstance(activation_function, ActivationFunction):
+            raise TypeError("Activation function must be an enumeration of ActivationFunction.")
+
+    @staticmethod
     def get_new_sum_and_activation(neuron):
         new_sum_value = 0
         for weight in neuron.weights['weights_to_this_neuron']:
@@ -176,33 +184,12 @@ class NeuralNet:
         neuron.set_sum(new_sum_value)
         neuron.set_activation(sigmoid(new_sum_value))
 
-    def predict(self, input_data):
-        for i in range(len(input_data)):
-            self.neurons[0][i].set_activation(input_data[i])
-        for layer in self.neurons:
-            if self.neurons.index(layer) != 0:
-                for neuron in layer:
-                    self.get_new_sum_and_activation(neuron)
-        output = []
-        for neuron in self.get_output_layer():
-            output.append(neuron.get_activation())
-        # output = normalize(output)
-        # y_predicted = output.index(max(output))
-        # print(f'Output probability vector: {output}')
-        return self.get_output_layer()[0].get_activation()
-        # return output
-
     def train(self, input_data: np.ndarray, output_data: np.ndarray, epochs=10000):
         print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
         self.check_for_valid_input(input_data, output_data)
         for epoch in range(epochs):
             for x, y in zip(input_data, output_data):
-                for i in range(len(x)):
-                    self.neurons[0][i].set_activation(x[i])
-                for layer in self.neurons:
-                    if self.neurons.index(layer) != 0:
-                        for neuron in layer:
-                            self.get_new_sum_and_activation(neuron)
+                self.input_data_into_net(x)
 
                 correct_index = 0
                 for i in range(len(y)):
@@ -215,10 +202,7 @@ class NeuralNet:
                 # output_probabilities = normalize(output_probabilities)
                 y_predicted = self.get_output_layer()[0].get_activation()
                 # print(f'y_pred: {y_predicted}')
-
-                # derivative_of_loss = log_derivative(y_predicted)
-                # derivative_of_loss = mean_squared_error_derivative(y[correct_index], y_predicted)
-                derivative_of_loss = log_loss_derivative(y[correct_index], y_predicted)
+                derivative_of_loss = self.activation_function.derivative(y_predicted, y[correct_index])
 
                 for output_neuron in self.get_output_layer():
                     output_neuron.add_change_in_activation(derivative_of_loss)
@@ -235,6 +219,25 @@ class NeuralNet:
             #     y_predictions = np.apply_along_axis(self.predict, 1, input_data)
             #     self.print_loss_function(output_data, y_predictions, epoch)
         self.print_net()
+
+    def predict(self, input_data):
+        self.input_data_into_net(input_data)
+        output = []
+        for neuron in self.get_output_layer():
+            output.append(neuron.get_activation())
+        # output = normalize(output)
+        # y_predicted = output.index(max(output))
+        # print(f'Output probability vector: {output}')
+        return self.get_output_layer()[0].get_activation()
+        # return output
+
+    def input_data_into_net(self, x):
+        for i in range(len(x)):
+            self.neurons[0][i].set_activation(x[i])
+        for layer in self.neurons:
+            if self.neurons.index(layer) != 0:
+                for neuron in layer:
+                    self.get_new_sum_and_activation(neuron)
 
     def update_net(self):
         for layer in self.neurons:
