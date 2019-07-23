@@ -189,6 +189,7 @@ class NeuralNet:
         self.check_for_valid_input(input_data, output_data)
         for epoch in range(epochs):
             for x, y in zip(input_data, output_data):
+                # print(f'\n\n\ndata: {x}')
                 self.input_data_into_net(x)
 
                 correct_index = 0
@@ -197,14 +198,23 @@ class NeuralNet:
                         correct_index = i
 
                 output_probabilities = []
-                for neuron in self.neurons[self.number_of_layers - 2]:
+                for neuron in self.get_output_layer():
                     output_probabilities.append(neuron.get_activation())
                 # output_probabilities = normalize(output_probabilities)
-                y_predicted = self.get_output_layer()[0].get_activation()
+                y_predicted = self.get_output_layer()[correct_index].get_activation()
                 # print(f'y_pred: {y_predicted}')
-                derivative_of_loss = self.activation_function.derivative(y_predicted, y[correct_index])
+                # derivative_of_loss = self.activation_function.derivative(y_predicted, y[correct_index])
 
-                for output_neuron in self.get_output_layer():
+                for i in range(len(self.get_output_layer())):
+                    sum_of_output_activations = sum(output_probabilities)
+                    output_neuron = self.get_output_layer()[i]
+                    # derivative_of_loss = -logloss(y[0], y_predicted)
+                    if i == correct_index:
+                        derivative_of_loss = -(sum_of_output_activations - y_predicted) / \
+                                             (sum_of_output_activations * y_predicted)
+                    else:
+                        derivative_of_loss = 1 / sum_of_output_activations
+                    # print(f'{output_neuron}: \n\t {derivative_of_loss}')
                     output_neuron.add_change_in_activation(derivative_of_loss)
                     change_in_bias = derivative_of_loss * sigmoid_derivative(output_neuron.get_sum())
                     output_neuron.add_change_in_bias(change_in_bias)
@@ -225,11 +235,11 @@ class NeuralNet:
         output = []
         for neuron in self.get_output_layer():
             output.append(neuron.get_activation())
-        # output = normalize(output)
+        output = normalize(output)
         # y_predicted = output.index(max(output))
         # print(f'Output probability vector: {output}')
-        return self.get_output_layer()[0].get_activation()
-        # return output
+        # return self.get_output_layer()[0].get_activation()
+        return output
 
     def input_data_into_net(self, x):
         for i in range(len(x)):
@@ -266,6 +276,7 @@ class NeuralNet:
             dl_da += from_weight.to_neuron.get_change_in_activation() * \
                      sigmoid_derivative(from_weight.to_neuron.get_sum()) * \
                      from_weight.weight
+        # print(f'{neuron}: \n\t {dl_da}')
         neuron.add_change_in_activation(dl_da)
         if bias_values_from_stuff_to_the_right != 0:
             new_bias_value *= bias_values_from_stuff_to_the_right
@@ -277,6 +288,7 @@ class NeuralNet:
             new_weight_value = sigmoid_derivative(neuron.get_sum()) * \
                                to_weight.from_neuron.get_activation() * \
                                neuron.get_change_in_activation()
+            # print(f'{to_weight}: \n\t {new_weight_value}')
             to_weight.add_change(new_weight_value)
 
     @staticmethod
@@ -339,8 +351,11 @@ class NeuralNet:
 def run_five_neuron_net_with_two_hidden_for_MOD2():
     x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
     y_test = np.array([[0, 1], [1, 0], [0, 1], [1, 0]])
-    net = NeuralNet(2, 4, 2)
-    net.train(x_test, y_test, 1000)
+    hidden_node_biases = [2, 2]
+    output_node_biases = [3, 3]
+    weights = [5, 5, 5, 5, 5, 5, 5, 5]
+    net = NeuralNet(2, 3, 2, 2)
+    net.train(x_test, y_test, 50000)
     test = [1, 0]
     test1 = [0, 1]
     test2 = [1, 1]
@@ -351,6 +366,30 @@ def run_five_neuron_net_with_two_hidden_for_MOD2():
     print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {0}")
     print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
 
+
+# def run_five_neuron_net_with_two_hidden_for_MOD2():
+#     x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
+#     y_test = np.array([[1], [0], [1], [0]])
+#     hidden_node_biases = [0.9187354524184437,
+#                           0.5213956501805911]
+#     output_node_biases = [0.23368323925607237]
+#     weights = [0.2733122768506624,
+#                0.06172111195485308,
+#                0.19960776330233654,
+#                0.7176283115012685,
+#                0.14123070012246786,
+#                0.9430781448680191]
+#     net = NeuralNet(2, 3, 2, 1, hidden_node_biases, output_node_biases, weights)
+#     net.train(x_test, y_test, 1)
+#     test = [1, 0]
+#     test1 = [0, 1]
+#     test2 = [1, 1]
+#     test3 = [0, 0]
+#     print('\n\n-----------PREDICTIONS FOR MOD 2 WITH 2 HIDDEN NEURONS-----------')
+#     print(f"Input {test},  Prediction: {net.predict(test)},  Actual: {1}")
+#     print(f"Input {test1},  Prediction: {net.predict(test1)},  Actual: {1}")
+#     print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {0}")
+#     print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {0}")
 
 def test_for_multiple_inputs():
     x_test = np.array([[1, 0, 1], [0, 0, 1], [0, 1, 1], [1, 1, 1], [0, 1, 0]])
@@ -383,6 +422,7 @@ def test_for_multiple_outputs():
     print(f"Input {test2},  Prediction: {net.predict(test2)},  Actual: {[1, 0, 0]}")
     print(f"Input {test3},  Prediction: {net.predict(test3)},  Actual: {[0, 0, 1]}")
 
-# run_five_neuron_net_with_two_hidden_for_MOD2()
+
+run_five_neuron_net_with_two_hidden_for_MOD2()
 # test_for_multiple_inputs()
 # test_for_multiple_outputs()

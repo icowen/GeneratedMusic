@@ -2,6 +2,8 @@ import sys
 import numpy as np
 import unittest
 from unittest.mock import patch
+
+from Helpers import ActivationFunction
 from NeuralNet import NeuralNet
 
 
@@ -143,7 +145,7 @@ class TestForDifferentLogic(unittest.TestCase):
     def test_five_neurons_for_mod2(self, mocked_print):
         x_test = np.array([[1, 0], [0, 0], [0, 1], [1, 1]])
         y_test = np.array([[1], [0], [1], [0]])
-        net = NeuralNet(2, 3, 2)
+        net = NeuralNet(2, 3, 2, activation_function=ActivationFunction.LOG_LOSS)
         net.train(x_test, y_test, 20000)
         sys.stderr.write(f'\n\nFive neuron net predicting for MOD 2:\n')
         for test, expected in zip([[1, 0], [0, 1], [1, 1], [0, 0]], [1, 1, 0, 0]):
@@ -246,6 +248,68 @@ class TestForMultipleHiddenLayers(unittest.TestCase):
         self.assertAlmostEqual(predict, 0.1, 1)
 
 
+class TestForMultipleOutputs(unittest.TestCase):
+    def setUp(self):
+        self.patcher = patch('builtins.print')
+        self.mock_object = self.patcher.start()
+        self.x_test = np.array([[1, 0], [0, 1], [0, 0], [1, 1]])
+        self.y_test = np.array([[0, 1], [0, 1], [1, 0], [1, 0]])
+        self.hidden_node_biases = [0.9187354524184437,
+                                   0.5213956501805911]
+        self.output_node_biases = [0.519071848833954,
+                                   0.23368323925607237]
+        self.weights = [0.2733122768506624,
+                        0.06172111195485308,
+                        0.19960776330233654,
+                        0.7176283115012685,
+                        0.7266500706529916,
+                        0.14123070012246786,
+                        0.7976515858989347,
+                        0.9430781448680191]
+        self.net = NeuralNet(2, 3, 2, 2,
+                             self.hidden_node_biases,
+                             self.output_node_biases,
+                             self.weights,
+                             activation_function=ActivationFunction.LOG)
+
+    def tearDown(self):
+        self.patcher.stop()
+
+    def test_weights(self):
+        self.assertEqual(self.net.get_weights(), self.weights)
+
+    def test_biases(self):
+        self.assertEqual(self.net.get_biases(), [0.9187354524184437,
+                                                 0.5213956501805911,
+                                                 0.519071848833954,
+                                                 0.23368323925607237])
+
+    def test_partial_derivatives_for_biases(self):
+        self.net.train(self.x_test, self.y_test, 1)
+        self.assertEqual(self.net.get_biases(), [0.9198459086390893,
+                                                 0.5242404899751469,
+                                                 0.5255781223221769,
+                                                 0.2430071578453625])
+
+    def test_partial_derivatives_for_weights(self):
+        self.net.train(self.x_test, self.y_test, 1)
+        self.assertEqual(self.net.get_weights(), [0.27381886202462796,
+                                                  0.0631086112184243,
+                                                  0.2001033164219386,
+                                                  0.7187651637382859,
+                                                  0.7315792615103677,
+                                                  0.14829965009745177,
+                                                  0.802227542300177,
+                                                  0.9496465203689145])
+
+    @unittest.skip
+    def test_should_predict_correct_for_equals(self):
+        self.net.train(self.x_test, self.y_test, 10000)
+        predict = self.net.predict([1])
+        self.assertAlmostEqual(predict, 0.9, 1)
+        predict = self.net.predict([0])
+        self.assertAlmostEqual(predict, 0.1, 1)
+
+
 if __name__ == '__main__':
     unittest.main()
-
