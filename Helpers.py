@@ -11,37 +11,41 @@ def normalize(output_probabilities):
     return list(map(get_new_p, output_probabilities))
 
 
-def log(y_predicted, y_true):
+def log(y_predicted, *args):
     return np.log(y_predicted)
 
 
-def log_derivative(y_predicted, y_true):
-    return -1 / y_predicted
+def log_derivative(y_predicted, y_true, is_correct_index, sum_of_output_activations):
+    if is_correct_index:
+        return -(sum_of_output_activations - y_predicted) / \
+               (sum_of_output_activations * y_predicted)
+    else:
+        return 1 / sum_of_output_activations
 
 
-def mean_squared_error_derivative(y_predicted, y_true):
+def mean_squared_error_derivative(y_predicted, y_true, *args):
     return -2 * (y_true - y_predicted)
 
 
-def mean_squared_error(y_predicted, y_true):
+def mean_squared_error(y_predicted, y_true, *args):
     return (y_true - y_predicted) ** 2
 
 
-def log_loss_derivative(y_predicted, y_true):
+def log_loss_derivative(y_predicted, y_true, *args):
     if y_true == 1:
         return -1 / y_predicted
     else:
         return 1 / (1 - y_predicted)
 
 
-def logloss(y_predicted, y_true):
+def logloss(y_predicted, y_true, *args):
     if y_true == 1:
         return -np.log(y_predicted)
     else:
         return -np.log(1 - y_predicted)
 
 
-def mse_loss(y_predicted, y_true):
+def mse_loss(y_predicted, y_true, *args):
     return ((y_true - y_predicted) ** 2).mean()
 
 
