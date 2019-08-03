@@ -1,9 +1,10 @@
 class Weight:
-    def __init__(self, weight, from_neuron):
+    def __init__(self, weight, from_neuron, learning_rate):
         self.weight = weight
         self.from_neuron = from_neuron
         self.to_neuron = None
         self.change = 0
+        self.learning_rate = learning_rate
 
     def __str__(self):
         return f'WEIGHT--- Weight: {self.weight}, ' \
@@ -20,4 +21,7 @@ class Weight:
         self.change = change
 
     def update(self):
-        self.weight = self.weight - self.change * .1
+        self.weight = self.weight - self.change * self.learning_rate
+
+    def get_learning_rate(self):
+        return self.learning_rate

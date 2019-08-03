@@ -14,13 +14,15 @@ class NeuralNet:
                  hidden_neuron_biases: list = None,
                  output_neuron_biases: list = None,
                  weights=None,
-                 activation_function=ActivationFunction.LOG_LOSS):
+                 activation_function=ActivationFunction.LOG_LOSS,
+                 learning_rate=0.1):
         self.neurons = []
         self.weights = []
         self.number_of_layers = number_of_layers
         self.number_of_output_neurons = number_of_output_neurons
         self.number_of_neurons_per_layer = number_of_neurons_per_layer
         self.activation_function = activation_function
+        self.learning_rate = learning_rate
         self.number_of_neurons = number_of_input_neurons + \
                                  (number_of_layers - 2) * number_of_neurons_per_layer + \
                                  number_of_output_neurons
@@ -78,7 +80,6 @@ class NeuralNet:
             for neuron in output_layer:
                 output.append(neuron.get_activation())
             output = normalize(output)
-            print(f'Input: {input_data}; Normalized Probability Vector: {output}')
             index_with_max_probability = output.index(max(output))
             return index_with_max_probability
 
@@ -180,7 +181,7 @@ class NeuralNet:
     def set_input_neurons(self, number_of_input_neurons):
         input_neurons = []
         for n in range(number_of_input_neurons):
-            neuron = Neuron(random.random(), 1, n)
+            neuron = Neuron(random.random(), 1, n, self.learning_rate)
             input_neurons.append(neuron)
         self.neurons.append(input_neurons)
 
@@ -192,7 +193,7 @@ class NeuralNet:
             for neuron_position in range(self.number_of_neurons_per_layer):
                 bias = hidden_neuron_biases[i] if hidden_neuron_biases else random.random()
                 i += 1
-                neuron = Neuron(bias, layer_number + 2, neuron_position)
+                neuron = Neuron(bias, layer_number + 2, neuron_position, self.learning_rate)
                 layer.append(neuron)
             self.neurons.append(layer)
 
@@ -201,7 +202,7 @@ class NeuralNet:
         layer = []
         for neuron_position in range(self.number_of_output_neurons):
             bias = output_neuron_biases[neuron_position] if output_neuron_biases else random.random()
-            neuron = Neuron(bias, self.number_of_layers, neuron_position)
+            neuron = Neuron(bias, self.number_of_layers, neuron_position, self.learning_rate)
             layer.append(neuron)
         self.neurons.append(layer)
 
@@ -215,7 +216,7 @@ class NeuralNet:
                     for neuron_in_next_layer in next_layer:
                         weight_value = weights[i] if weights else random.random()
                         i += 1
-                        weight = Weight(weight_value, neuron)
+                        weight = Weight(weight_value, neuron, self.learning_rate)
                         weight.set_to_neuron(neuron_in_next_layer)
                         neuron.add_weight_from_this_neuron(weight)
                         neuron_in_next_layer.add_weight_to_this_neuron(weight)

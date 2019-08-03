@@ -1,5 +1,5 @@
 class Neuron:
-    def __init__(self, bias, layer, position_in_layer):
+    def __init__(self, bias, layer, position_in_layer, learning_rate):
         self.bias = bias
         self.layer = layer
         self.position_in_layer = position_in_layer
@@ -8,6 +8,7 @@ class Neuron:
         self.sum = 0
         self.change_in_bias = 0
         self.change_in_activation = 0
+        self.learning_rate = learning_rate
         self.weights = {'weights_from_this_neuron': [],
                         'weights_to_this_neuron': []}
 
@@ -47,6 +48,9 @@ class Neuron:
     def get_change_in_activation(self):
         return self.change_in_activation
 
+    def get_learning_rate(self):
+        return self.learning_rate
+
     def add_weight_to_this_neuron(self, weight):
         self.weights['weights_to_this_neuron'].append(weight)
 
@@ -60,4 +64,4 @@ class Neuron:
         self.change_in_activation = change_in_activation
 
     def update(self):
-        self.bias = self.bias - self.change_in_bias * .1
+        self.bias = self.bias - self.change_in_bias * self.learning_rate
