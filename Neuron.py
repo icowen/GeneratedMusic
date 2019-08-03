@@ -60,4 +60,4 @@ class Neuron:
         self.change_in_activation = change_in_activation
 
     def update(self):
-        self.bias = self.bias - self.change_in_bias * .01
+        self.bias = self.bias - self.change_in_bias * .1

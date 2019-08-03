@@ -2,6 +2,7 @@ import random
 from Helpers import *
 from Neuron import Neuron
 from Weight import Weight
+import time
 
 
 class NeuralNet:
@@ -39,6 +40,7 @@ class NeuralNet:
     def train(self, input_data: np.ndarray,
               output_data: np.ndarray,
               epochs=10000):
+        start_time = time.time()
         print(f'\n\n-------------------------------TRAINING NET FOR {epochs} TIMES-------------------------------')
         self.check_for_valid_input(input_data, output_data)
         for epoch in range(epochs):
@@ -46,28 +48,25 @@ class NeuralNet:
                 self.input_data_into_net(x)
 
                 correct_index = self.get_correct_index(y)
-
-                output_probabilities = []
-                for neuron in self.get_output_layer():
-                    output_probabilities.append(neuron.get_activation())
+                output_probabilities = self.get_output_probabilities()
 
                 y_predicted = self.get_output_layer()[correct_index].get_activation()
+                sum_of_output_probabilities = sum(output_probabilities)
                 y_true = y[correct_index]
-                sum_of_output_activations = sum(output_probabilities)
 
                 for i in range(len(self.get_output_layer())):
                     output_neuron = self.get_output_layer()[i]
-                    is_correct_index = correct_index == i
                     derivative_of_loss = self.activation_function.derivative(y_predicted,
                                                                              y_true,
-                                                                             is_correct_index,
-                                                                             sum_of_output_activations)
+                                                                             correct_index == i,
+                                                                             sum_of_output_probabilities)
                     self.calculate_partial_derivative_for_output_neuron(derivative_of_loss, output_neuron)
                     self.calculate_partial_derivatives_for_weights(output_neuron)
 
                 self.calculate_partial_derivatives()
                 self.update_net()
         self.print_net()
+        print(f'\n\n Net trained for {epochs} epochs in {time.time() - start_time} seconds.')
 
     def predict(self, input_data):
         self.input_data_into_net(input_data)
@@ -82,6 +81,12 @@ class NeuralNet:
             print(f'Input: {input_data}; Normalized Probability Vector: {output}')
             index_with_max_probability = output.index(max(output))
             return index_with_max_probability
+
+    def get_output_probabilities(self):
+        output_probabilities = []
+        for neuron in self.get_output_layer():
+            output_probabilities.append(neuron.get_activation())
+        return output_probabilities
 
     def input_data_into_net(self, x):
         for i in range(len(x)):
@@ -255,12 +260,3 @@ class NeuralNet:
                 print(neuron)
                 for weight in neuron.weights["weights_from_this_neuron"]:
                     print(weight)
-
-
-x_test = np.array([[1, 0, 1], [0, 1, 0], [0, 1, 1], [1, 1, 0], [1, 0, 0]])
-y_test = np.array([[0, 0, 1], [0, 1, 0], [1, 0, 0], [0, 1, 0], [1, 0, 0]])
-net = NeuralNet(3, 3, 3, 3, activation_function=ActivationFunction.LOG)
-net.train(x_test, y_test, 100000)
-for test, expected in zip([[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1]], [0, 1, 1, 2]):
-    test_result = net.predict(test)
-    print(f'Input: {test}, Expected: {expected}, Prediction: {test_result}\n')

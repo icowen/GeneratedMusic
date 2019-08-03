@@ -20,4 +20,4 @@ class Weight:
         self.change = change
 
     def update(self):
-        self.weight = self.weight - self.change * .01
+        self.weight = self.weight - self.change * .1
