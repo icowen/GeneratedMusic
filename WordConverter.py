@@ -5,7 +5,8 @@ import re
 
 class WordConverter:
     def __init__(self, word_list):
-        self.space = np.zeros((26,), dtype=int)
+        self.space = np.zeros((27,), dtype=int)
+        self.space[26] = 1
         self.word_list = word_list
         self.converted_words = self.convert_words()
 
@@ -31,7 +32,7 @@ class WordConverter:
         return first_two_letters, next_letter
 
     def convert_char(self, char):
-        c = np.zeros((26,), dtype=int)
+        c = np.zeros((27,), dtype=int)
         c[self.convert_char_to_number(char)] = 1
         return c
 
