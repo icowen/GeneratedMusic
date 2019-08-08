@@ -1,22 +1,23 @@
 <h1>Generated Music</h1>
 This project reads flute solo files from various composers and predicts the next note of a sequence based on the previous five notes.
 
-<h2>MidiParser.py</h2>
-This file takes in a midi file and displays the notes in chronological order.
+<h2>NeuralNetTest.py</h2>
+This is the file that you would want to change in order to configure a neural net. In the class
+<code>TestLETTERS</code>, run the <code>test_run_net</code> method. You can change the size of the net,
+the learning rate, activation function, input file, number of epochs, and anything else
+from this one method. You may need to configure this class by:
 
-To use this file, open the terminal (select <b>View | Tool Windows | Terminal</b>) then:
-1. Run <code>pip install mido</code>.
+1. Navigate to <i>Run | Edit Configurations</i> in the top left.
+2. Click the <code>+ | PythonTests | Nosetest</code> in the top left of the window.
+    2. If that is not an option, run <code>pip install nose</code> in the terminal and then restart WebStorm.
+3. Then add a name for the configuration
+4. Choose <code>Script Path</code> and click the folder on the right
+5. Choose <code>NeuralNetTest.py</code>.
+6. Click save and exit the window.
+7. In the top right next to the play button, choose the name of your configuration from the dropdown.
+8. You can now run the test by click the play button, or going to <i>Run | Run {name of your configuration}</i> or pressing <code>Shift-F10</code>
 
-<h2>MidiScraper.py</h2>
-This file downloaded all of the .mid files in the <code>GeneratedMusic/MusicFiles</code> directory. 
-
-To use this file, open the terminal (select <b>View | Tool Windows | Terminal</b>) then:
-1. Run <code>pip install selenium</code>.
-2. Download <code>ChromeDriver 74.0.3729.6</code> (or whatever version of chrome you use) from <a href>http://chromedriver.chromium.org/downloads</a>.
-3. In environment variables on your computer, make sure the <code>path</code> variable is linked to where you just downloaded and saved <code>chromedriver.exe</code>.
-4. In MidiScraper, put the path to your chromedriver in <code>driver = webdriver.Chrome("your path to chromedriver")</code>.
-
-You can use this file as a template to get new midi files as well.
+If other tests are still running, add <code>@unittest.skip</code> above the class name.
 
 <h2> How to Install TensorFlow</h1>
 
