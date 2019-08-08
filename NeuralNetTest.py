@@ -12,30 +12,35 @@ from WordConverter import WordConverter
 @patch('builtins.print')
 class TestLETTERS(unittest.TestCase):
     def test_run_net(self, mocked_print):
+        number_of_input_neurons = 54
         nodes_per_layer = 50
         number_of_layers = 3
-        number_of_epochs = 2
-        
+        number_of_output_neurons = 27
+        number_of_epochs = 10000
+        learning_rate = .3
+
         word_file = open('words.txt', 'r')
         words = []
         for w in word_file.readlines():
             words.append(w)
         word_file.close()
+        sys.stderr.write(f'Input of {len(words)} words.')
         converter = WordConverter(words)
 
         x_test, y_test = converter.get_converted_words()
-        net = NeuralNet(number_of_input_neurons=54,
+        net = NeuralNet(number_of_input_neurons=number_of_input_neurons,
                         number_of_layers=number_of_layers,
                         number_of_neurons_per_layer=nodes_per_layer,
-                        number_of_output_neurons=27,
-                        activation_function=ActivationFunction.LOG)
+                        number_of_output_neurons=number_of_output_neurons,
+                        activation_function=ActivationFunction.LOG,
+                        learning_rate=learning_rate)
 
         start_time = time.time()
         sys.stderr.write(f'\nTraining {nodes_per_layer} nodes per layer with '
                          f'{number_of_layers - 2 } hidden layers for '
                          f'{number_of_epochs} times.')
-        net.train(np.asarray(x_test[:3]),
-                  np.asarray(y_test[:3]),
+        net.train(np.asarray(x_test),
+                  np.asarray(y_test),
                   number_of_epochs)
         sys.stderr.write(f'\nTraining took {time.time() - start_time} seconds.\n')
 
@@ -43,7 +48,6 @@ class TestLETTERS(unittest.TestCase):
         test_output = y_test[:50]
         for test, expected in zip(test_input, test_output):
             test_result = net.predict(test)
-            sys.stderr.write(f'test: {test}')
             letter_1 = converter.letter_dict(list(test[:27]).index(1))
             letter_2 = converter.letter_dict(list(test[27:]).index(1))
             sys.stderr.write(f'Input: {letter_1+letter_2}, '
