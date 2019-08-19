@@ -64,7 +64,7 @@ class TestForMultipleOutputs(unittest.TestCase):
 
     def test_get_indicies(self):
         actual = self.converter.convert_index_to_letter(self.output)[0]
-        expected = 'e'
+        expected = 101
         self.assertEqual(actual, expected)
 
 

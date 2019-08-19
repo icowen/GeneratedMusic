@@ -18,6 +18,7 @@ sys.stderr.write(f'Input of {len(words)} words.')
 converter = WordConverter(words)
 
 x_list, y_list = converter.get_converted_words()
+y_list = converter.convert_index_to_letter(y_list)
 x_train = np.asarray(x_list)
 y_train = np.asarray(y_list)
 print(f'test: {x_test}')

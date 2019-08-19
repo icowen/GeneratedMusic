@@ -42,8 +42,8 @@ class WordConverter:
     def convert_char_to_number(self, char):
         return ord(char) - 97
 
-    def convert_number_to_char(self, letter_list):
-        return chr(letter_list.index(1) + 97)
+    def convert_number_list_to_ascii(self, letter_list):
+        return letter_list.index(1) + 97
 
     def get_converted_words(self):
         return self.input
@@ -60,7 +60,7 @@ class WordConverter:
     def convert_index_to_letter(self, list_of_letters_lists):
         letters = []
         for letter_list in list_of_letters_lists:
-            letters.append(self.convert_number_to_char(letter_list.tolist()))
+            letters.append(self.convert_number_list_to_ascii(letter_list.tolist()))
         return letters
 
     def set_output(self, next_letter):
