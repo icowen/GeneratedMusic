@@ -16,7 +16,7 @@ class TestLETTERS(unittest.TestCase):
         nodes_per_layer = 50
         number_of_layers = 3
         number_of_output_neurons = 27
-        number_of_epochs = 10000
+        number_of_epochs = 1
         learning_rate = .3
 
         word_file = open('words.txt', 'r')
