@@ -43,7 +43,7 @@ class WordConverter:
         return ord(char) - 97
 
     def convert_number_list_to_ascii(self, letter_list):
-        return letter_list.index(1) + 97
+        return letter_list.index(1)
 
     def get_converted_words(self):
         return self.input
