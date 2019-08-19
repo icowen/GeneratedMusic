@@ -8,7 +8,8 @@ class WordConverter:
         self.space = np.zeros((27,), dtype=int)
         self.space[26] = 1
         self.word_list = word_list
-        self.converted_words = self.convert_words()
+        self.input = self.convert_words()
+        self.output = []
 
     def convert_words(self):
         first_two_letters = []
@@ -29,6 +30,8 @@ class WordConverter:
                                         self.convert_char(word[i + 1])]))
                     next_letter.append(self.convert_char(word[i + 2]))
 
+        self.set_output(next_letter)
+
         return first_two_letters, next_letter
 
     def convert_char(self, char):
@@ -39,8 +42,11 @@ class WordConverter:
     def convert_char_to_number(self, char):
         return ord(char) - 97
 
+    def convert_number_list_to_ascii(self, letter_list):
+        return letter_list.index(1)
+
     def get_converted_words(self):
-        return self.converted_words
+        return self.input
 
     def letter_dict(self, index):
         letter_dict = dict()
@@ -50,3 +56,12 @@ class WordConverter:
             return letter_dict[index]
         else:
             return ' '
+
+    def convert_index_to_letter(self, list_of_letters_lists):
+        letters = []
+        for letter_list in list_of_letters_lists:
+            letters.append(self.convert_number_list_to_ascii(letter_list.tolist()))
+        return letters
+
+    def set_output(self, next_letter):
+        self.output = next_letter
