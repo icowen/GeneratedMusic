@@ -10,4 +10,6 @@ sbatch \
 
 cd /home/icowen/GeneratedMusic
 
-python KerasTest.py
+pip3 install tensorflow --user
+pip3 install keras --user
+python3 KerasTest.py
