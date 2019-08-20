@@ -5,7 +5,7 @@ import numpy as np
 import unittest
 from unittest.mock import patch
 from Helpers import ActivationFunction
-from NeuralNet import NeuralNet
+from CustomNeuralNet.NeuralNet import NeuralNet
 from WordConverter import WordConverter
 
 

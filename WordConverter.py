@@ -43,7 +43,10 @@ class WordConverter:
         return ord(char) - 97
 
     def convert_number_list_to_ascii(self, letter_list):
-        return letter_list.index(1)
+        index = np.argmax(letter_list)
+        if index == 26:
+            return '\' \''
+        return chr(index + 97)
 
     def get_converted_words(self):
         return self.input
