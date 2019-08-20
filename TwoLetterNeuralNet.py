@@ -34,7 +34,7 @@ model.fit(x_train, np.asarray(y_train), epochs=50000)
 
 
 val_loss, val_acc = model.evaluate(x_train, y_train)
-print("val_loss: {0}; accuracy: {1}".format(val_loss, val_acc))
+print(f'val_loss: {val_loss}; accuracy: {val_acc}')
 
 x_test = x_train[:50]
 y_test = y_train[:50]
