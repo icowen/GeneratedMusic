@@ -6,7 +6,7 @@ sbatch \
 --mem=16000 \
 --time=15:00 \
 --job-name=generatedMusic \
---output=%j.output.log
+--output=output.log
 
 cd /home/icowen/GeneratedMusic
 
