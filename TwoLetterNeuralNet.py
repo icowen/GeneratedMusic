@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from WordConverter import WordConverter
+from tensorflow.python.client import device_lib
 
 
 def get_training_data():
@@ -22,6 +23,8 @@ model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(50, activation=tf.nn.sigmoid))
 model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+print(device_lib.list_local_devices())
 
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
