@@ -4,6 +4,7 @@ from WordConverter import WordConverter
 
 
 def get_training_data():
+    global converter
     word_file = open('words.txt', 'r')
     words = []
     for w in word_file.readlines():
@@ -11,7 +12,6 @@ def get_training_data():
     word_file.close()
     converter = WordConverter(words)
     x_list, y_list = converter.get_converted_words()
-    y_list = converter.convert_index_to_letter(y_list)
     return np.asarray(x_list), np.asarray(y_list)
 
 
@@ -24,16 +24,25 @@ model.add(tf.keras.layers.Dense(50, activation=tf.nn.relu))
 model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
 
 model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-model.fit(x_train, np.asarray(y_train), epochs=1000)
+model.fit(x_train, np.asarray(y_train), epochs=1)
 
-#
-# val_loss, val_acc = model.evaluate(x_train, y_train)
-# print("val_loss: {0}; accuracy: {1}".format(val_loss, val_acc))
-#
-# predictions = model.predict([x_test])
-#
-# for i in range(len(predictions)):
-#     print(np.argmax(predictions[i]))
+
+val_loss, val_acc = model.evaluate(x_train, y_train)
+print("val_loss: {0}; accuracy: {1}".format(val_loss, val_acc))
+
+x_test = x_train[:50]
+y_test = y_train[:50]
+
+predictions = model.predict([x_test])
+
+for i in range(len(predictions)):
+    first_letter = converter.convert_number_list_to_ascii(x_test[i][:27].tolist())
+    second_letter = converter.convert_number_list_to_ascii(x_test[i][27:].tolist())
+    input_letters = f'{first_letter}{second_letter}'
+    predicted_index = np.argmax(predictions[i])
+    predicted_letter = converter.convert_number_list_to_ascii(predicted_index)
+    actual = converter.convert_number_list_to_ascii(y_test[i])
+    print(f'Input: {input_letters} predicted_letter: {predicted_letter} acutal: {actual})')
