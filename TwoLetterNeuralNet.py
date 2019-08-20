@@ -27,7 +27,7 @@ model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-model.fit(x_train, np.asarray(y_train), epochs=1)
+model.fit(x_train, np.asarray(y_train), epochs=10000)
 
 
 val_loss, val_acc = model.evaluate(x_train, y_train)
