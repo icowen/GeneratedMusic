@@ -1,7 +1,7 @@
 import random
 from Helpers import *
-from Neuron import Neuron
-from Weight import Weight
+from CustomNeuralNet.Neuron import Neuron
+from CustomNeuralNet.Weight import Weight
 import time
 
 
