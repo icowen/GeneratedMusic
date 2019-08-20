@@ -12,4 +12,4 @@ cd /home/icowen/GeneratedMusic
 
 pip3 install tensorflow --user
 pip3 install keras --user
-python3 KerasTest.py
+python3 TwoLetterNeuralNet.py
