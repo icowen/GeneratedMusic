@@ -6,8 +6,10 @@ sbatch \
 --mem=16000 \
 --time=15:00 \
 --job-name=generatedMusic \
---output=%j.output.log
+--output=output.log
 
 cd /home/icowen/GeneratedMusic
 
-python KerasTest.py
+pip3 install tensorflow --user
+pip3 install keras --user
+python3 KerasTest.py
