@@ -29,8 +29,8 @@ model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
-
-model.fit(x_train, np.asarray(y_train), epochs=50000)
+with tf.device('/device:GPU:0'):
+    model.fit(x_train, np.asarray(y_train), epochs=50000)
 
 
 val_loss, val_acc = model.evaluate(x_train, y_train)
