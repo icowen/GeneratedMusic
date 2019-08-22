@@ -3,6 +3,9 @@ import numpy as np
 from WordConverter import WordConverter
 
 
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+
+
 def get_training_data():
     global converter
     word_file = open('words.txt', 'r')
