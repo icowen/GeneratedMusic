@@ -1,9 +1,17 @@
 import tensorflow as tf
 import numpy as np
 from WordConverter import WordConverter
+from tensorflow.python.client import device_lib
 
 
+def get_available_gpus():
+    local_device_protos = device_lib.list_local_devices()
+    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+
+
+print('--------------------Devices from session: ')
 sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+print(f'\n---------get_available_gpus: {get_available_gpus()}')
 
 
 def get_training_data():
@@ -29,6 +37,7 @@ model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
+
 with tf.device('/device:GPU:0'):
     model.fit(x_train, np.asarray(y_train), epochs=50000)
 
