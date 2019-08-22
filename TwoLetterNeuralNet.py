@@ -1,7 +1,9 @@
 import tensorflow as tf
 import numpy as np
 from WordConverter import WordConverter
-from tensorflow.python.client import device_lib
+
+
+sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
 
 
 def get_training_data():
@@ -23,8 +25,6 @@ model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(50, activation=tf.nn.sigmoid))
 model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
-sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-print(device_lib.list_local_devices())
 
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
@@ -34,7 +34,7 @@ model.fit(x_train, np.asarray(y_train), epochs=50000)
 
 
 val_loss, val_acc = model.evaluate(x_train, y_train)
-print("val_loss: {0}; accuracy: {1}".format(val_loss, val_acc))
+print(f'val_loss: {val_loss}; accuracy: {val_acc}')
 
 x_test = x_train[:50]
 y_test = y_train[:50]
