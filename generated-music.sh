@@ -10,6 +10,4 @@ sbatch \
 --job-name=generatedMusic \
 --output=output.log
 
-pip3 install tensorflow-gpu --user
-pip3 install keras --user
 python3 TwoLetterNeuralNet.py
