@@ -7,7 +7,7 @@ class WordConverter:
     def __init__(self, word_list):
         self.space = np.zeros((27,), dtype=int)
         self.space[26] = 1
-        self.word_list = word_list
+        self.word_list = self.clean_word_list(word_list)
         self.input = self.convert_words()
         self.output = []
 
@@ -15,7 +15,6 @@ class WordConverter:
         first_two_letters = []
         next_letter = []
         for word in self.word_list:
-            word = re.sub('[^a-zA_Z]', '', word.lower())
             for i in range(-1, len(word) - 1):
                 if i == -1:
                     first_two_letters.append(np.concatenate([self.space, self.convert_char(word[0])]))
@@ -33,6 +32,14 @@ class WordConverter:
         self.set_output(next_letter)
 
         return first_two_letters, next_letter
+
+    def clean_word_list(self, word_list):
+        clean = []
+        for line in word_list.split():
+            word = re.sub('[^a-zA_Z]', '', line.lower())
+            word = re.sub('([\s\n])+', ' ', word)
+            clean.append(word)
+        return clean
 
     def convert_char(self, char):
         c = np.zeros((27,), dtype=int)

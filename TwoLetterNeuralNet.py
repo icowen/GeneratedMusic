@@ -1,17 +1,21 @@
 import tensorflow as tf
 import numpy as np
 from WordConverter import WordConverter
+import sys
 from tensorflow.python.client import device_lib
 
 
-def get_available_gpus():
-    local_device_protos = device_lib.list_local_devices()
-    return [x.name for x in local_device_protos if x.device_type == 'GPU']
+np.set_printoptions(threshold=sys.maxsize)
 
 
-print('--------------------Devices from session: ')
-sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-print(f'\n---------get_available_gpus: {get_available_gpus()}')
+# def get_available_gpus():
+#     local_device_protos = device_lib.list_local_devices()
+#     return [x.name for x in local_device_protos if x.device_type == 'GPU']
+#
+#
+# print('--------------------Devices from session: ')
+# sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
+# print(f'\n---------get_available_gpus: {get_available_gpus()}')
 
 
 def get_training_data():
@@ -32,14 +36,16 @@ x_train = tf.keras.utils.normalize(x_train, axis=1)
 model = tf.keras.models.Sequential()
 model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(50, activation=tf.nn.sigmoid))
-model.add(tf.keras.layers.Dense(27, activation=tf.nn.softmax))
+model.add(tf.keras.layers.Dense(27, activation=tf.nn.sigmoid))
+
+# adam = tf.keras.optimizers.Adam(lr=.1)
 
 model.compile(optimizer='adam',
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
-with tf.device('/device:GPU:0'):
-    model.fit(x_train, np.asarray(y_train), epochs=50000)
+# with tf.device('/device:GPU:0'):
+model.fit(x_train, np.asarray(y_train), epochs=1000, batch_size=50)
 
 
 val_loss, val_acc = model.evaluate(x_train, y_train)
@@ -54,7 +60,8 @@ for i in range(len(predictions)):
     first_letter = converter.convert_number_list_to_ascii(x_test[i][:27].tolist())
     second_letter = converter.convert_number_list_to_ascii(x_test[i][27:].tolist())
     input_letters = f'{first_letter}{second_letter}'
-    predicted_index = np.argmax(predictions[i])
+    predicted_index = predictions[np.argmax(predictions[i])]
     predicted_letter = converter.convert_number_list_to_ascii(predicted_index)
     actual = converter.convert_number_list_to_ascii(y_test[i])
     print(f'Input: {input_letters} predicted_letter: {predicted_letter} acutal: {actual})')
+    print(predictions[i], '\n')

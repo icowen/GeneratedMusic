@@ -5,8 +5,8 @@ from WordConverter import WordConverter
 
 class TestForMultipleOutputs(unittest.TestCase):
     def setUp(self):
-        word_list = ["hello", "cat"]
-        self.converter = WordConverter(word_list)
+        text_file = 'hello, Ca\'t\ncat'
+        self.converter = WordConverter(text_file)
         self.input, self.output = self.converter.get_converted_words()
 
     def test_first_input(self):
