@@ -19,7 +19,7 @@ class TestLETTERS(unittest.TestCase):
         number_of_epochs = 1
         learning_rate = .3
 
-        word_file = open('words.txt', 'r')
+        word_file = open('../words.txt', 'r')
         words = []
         for w in word_file.readlines():
             words.append(w)
@@ -27,7 +27,7 @@ class TestLETTERS(unittest.TestCase):
         sys.stderr.write(f'Input of {len(words)} words.')
         converter = WordConverter(words)
 
-        x_test, y_test = converter.get_converted_words()
+        x_test, y_test = converter.get_input()
         net = NeuralNet(number_of_input_neurons=number_of_input_neurons,
                         number_of_layers=number_of_layers,
                         number_of_neurons_per_layer=nodes_per_layer,

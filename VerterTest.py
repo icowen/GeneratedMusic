@@ -5,9 +5,10 @@ from WordConverter import WordConverter
 
 class TestForMultipleOutputs(unittest.TestCase):
     def setUp(self):
-        text_file = 'hello, Ca\'t\ncat'
+        text_file = ['hello, Ca\'t', '\ncat']
         self.converter = WordConverter(text_file)
-        self.input, self.output = self.converter.get_converted_words()
+        self.input = self.converter.get_input()
+        self.output = self.converter.get_output()
 
     def test_first_input(self):
         space = np.zeros((27,), dtype=int)
@@ -48,7 +49,7 @@ class TestForMultipleOutputs(unittest.TestCase):
         np.testing.assert_array_equal(actual, expected)
 
     def test_convert_char_to_number(self):
-        actual = self.converter.convert_char_to_number('a')
+        actual = self.converter.get_index_for_char_array('a')
         expected = 0
         self.assertEqual(actual, expected)
 
@@ -62,10 +63,20 @@ class TestForMultipleOutputs(unittest.TestCase):
         expected = ' '
         self.assertEqual(actual, expected)
 
-    def test_get_indicies(self):
-        actual = self.converter.convert_index_to_letter(self.output)[0]
-        expected = 'e'
-        self.assertEqual(actual, expected)
+    @unittest.skip
+    def test_short_story(self):
+        word_file = open('shortStory.txt', 'r')
+        words = []
+        for w in word_file.readlines():
+            words.append(w)
+        word_file.close()
+        converter = WordConverter(words)
+        x = converter.get_input()
+        y = converter.get_output()
+        for i in range(20):
+            print(f'input: {converter.convert_index_to_ascii(x[i][:27])}'
+                  f'{converter.convert_index_to_ascii(x[i][27:])} '
+                  f'output: {converter.convert_index_to_ascii(y[i])}')
 
 
 if __name__ == '__main__':

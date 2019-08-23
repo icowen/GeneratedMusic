@@ -26,7 +26,7 @@ def get_training_data():
         words.append(w)
     word_file.close()
     converter = WordConverter(words)
-    x_list, y_list = converter.get_converted_words()
+    x_list, y_list = converter.get_input()
     return np.asarray(x_list), np.asarray(y_list)
 
 
@@ -57,11 +57,11 @@ y_test = y_train[:50]
 predictions = model.predict([x_test])
 
 for i in range(len(predictions)):
-    first_letter = converter.convert_number_list_to_ascii(x_test[i][:27].tolist())
-    second_letter = converter.convert_number_list_to_ascii(x_test[i][27:].tolist())
+    first_letter = converter.convert_index_to_ascii(x_test[i][:27].tolist())
+    second_letter = converter.convert_index_to_ascii(x_test[i][27:].tolist())
     input_letters = f'{first_letter}{second_letter}'
     predicted_index = predictions[np.argmax(predictions[i])]
-    predicted_letter = converter.convert_number_list_to_ascii(predicted_index)
-    actual = converter.convert_number_list_to_ascii(y_test[i])
+    predicted_letter = converter.convert_index_to_ascii(predicted_index)
+    actual = converter.convert_index_to_ascii(y_test[i])
     print(f'Input: {input_letters} predicted_letter: {predicted_letter} acutal: {actual})')
     print(predictions[i], '\n')

@@ -8,8 +8,9 @@ class WordConverter:
         self.space = np.zeros((27,), dtype=int)
         self.space[26] = 1
         self.word_list = self.clean_word_list(word_list)
-        self.input = self.convert_words()
+        self.input = []
         self.output = []
+        self.convert_words()
 
     def convert_words(self):
         first_two_letters = []
@@ -18,7 +19,10 @@ class WordConverter:
             for i in range(-1, len(word) - 1):
                 if i == -1:
                     first_two_letters.append(np.concatenate([self.space, self.convert_char(word[0])]))
-                    next_letter.append(self.convert_char(word[1]))
+                    if len(word) > 1:
+                        next_letter.append(self.convert_char(word[1]))
+                    else:
+                        next_letter.append(self.space)
                 elif i == len(word) - 2:
                     first_two_letters.append(np.concatenate([self.convert_char(word[i]),
                                                              self.convert_char(word[i + 1])]))
@@ -29,49 +33,43 @@ class WordConverter:
                                         self.convert_char(word[i + 1])]))
                     next_letter.append(self.convert_char(word[i + 2]))
 
-        self.set_output(next_letter)
-
-        return first_two_letters, next_letter
+        self.input = first_two_letters
+        self.output = next_letter
 
     def clean_word_list(self, word_list):
         clean = []
-        for line in word_list.split():
-            word = re.sub('[^a-zA_Z]', '', line.lower())
-            word = re.sub('([\s\n])+', ' ', word)
-            clean.append(word)
+        for line in word_list:
+            for word in line.split():
+                word = re.sub('[^a-zA_Z]', '', word.lower())
+                word = re.sub('([\s])', ' ', word)
+                clean.append(word)
         return clean
 
     def convert_char(self, char):
         c = np.zeros((27,), dtype=int)
-        c[self.convert_char_to_number(char)] = 1
+        c[self.get_index_for_char_array(char)] = 1
         return c
 
-    def convert_char_to_number(self, char):
+    def get_index_for_char_array(self, char):
         return ord(char) - 97
 
-    def convert_number_list_to_ascii(self, letter_list):
+    def convert_index_to_ascii(self, letter_list):
         index = np.argmax(letter_list)
         if index == 26:
             return '\' \''
         return chr(index + 97)
 
-    def get_converted_words(self):
-        return self.input
-
     def letter_dict(self, index):
         letter_dict = dict()
         for c in ascii_lowercase:
-            letter_dict[self.convert_char_to_number(c)] = c
+            letter_dict[self.get_index_for_char_array(c)] = c
         if index in letter_dict.keys():
             return letter_dict[index]
         else:
             return ' '
 
-    def convert_index_to_letter(self, list_of_letters_lists):
-        letters = []
-        for letter_list in list_of_letters_lists:
-            letters.append(self.convert_number_list_to_ascii(letter_list.tolist()))
-        return letters
+    def get_output(self):
+        return self.output
 
-    def set_output(self, next_letter):
-        self.output = next_letter
+    def get_input(self):
+        return self.input
