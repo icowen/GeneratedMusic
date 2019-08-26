@@ -102,6 +102,7 @@ class TwoLetterNeuralNet:
             next_letter = self.generate_next_letter(first_letter, second_letter)
             result += next_letter
             first_letter = second_letter
-            second_letter = next_letter
+            second_letter = ' ' if next_letter == '\' \'' else next_letter
+            print(result)
 
         return result

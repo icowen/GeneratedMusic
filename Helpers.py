@@ -80,7 +80,7 @@ def letter_dict(index):
 
 
 def get_index_for_char_array(char):
-    return ord(char) - 97
+    return 26 if char == ' ' else ord(char) - 97
 
 
 def convert_char(char):
