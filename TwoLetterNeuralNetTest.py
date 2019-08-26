@@ -6,7 +6,9 @@ from TwoLetterNeuralNet import TwoLetterNeuralNet
 
 class MyTestCase(unittest.TestCase):
     def setUp(self):
-        self.net = TwoLetterNeuralNet(number_of_epochs=1)
+        self.net = TwoLetterNeuralNet(number_of_epochs=10000,
+                                      save_model=True)
+        self.net.read_model_from_json('TwoLetterNeuralNet10000Trials.json')
         self.net.train()
         self.result = self.net.generate_words(998, 'a', 't')
 

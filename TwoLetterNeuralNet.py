@@ -1,11 +1,13 @@
+import datetime
 import random
+import time
+
 import tensorflow as tf
 import numpy as np
 from Helpers import convert_char, convert_index_number_to_ascii_letter
 from WordConverter import WordConverter
 import sys
 from tensorflow.python.client import device_lib
-
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -29,7 +31,8 @@ class TwoLetterNeuralNet:
                  number_of_hidden_nodes=50,
                  number_of_output_nodes=27,
                  number_of_epochs=10000,
-                 batch_size=50):
+                 batch_size=50,
+                 save_model=False):
         self.input_file = input_file
         self.x_train, self.y_train = self.get_training_data()
         self.model = tf.keras.models.Sequential()
@@ -37,7 +40,8 @@ class TwoLetterNeuralNet:
         self.number_of_output_nodes = number_of_output_nodes
         self.number_of_epochs = number_of_epochs
         self.batch_size = batch_size
-        self.set_up_model()
+        self.save_model = save_model
+        if save_model: self.set_up_model()
 
     def get_training_data(self):
         global converter
@@ -68,18 +72,19 @@ class TwoLetterNeuralNet:
                        self.y_train,
                        epochs=self.number_of_epochs,
                        batch_size=self.batch_size)
-        self.model.save('TwoLetterNeuralNet.h5')
-        self.save_model_to_json()
+        if self.save_model:
+            self.model.save('TwoLetterNeuralNet.h5')
+            self.save_model_to_json()
 
     def save_model_to_json(self):
         model_json = self.model.to_json()
-        with open('TwoLetterNeuralNet.json', 'w') as json_file:
+        with open(f'TwoLetterNeuralNet{round(time.time())}.json', 'w') as json_file:
             json_file.write(model_json)
         self.model.save_weights('weights.h5')
         print('Saved model to disk')
 
-    def read_model_from_json(self):
-        json_file = open('TwoLetterNeuralNet.json', 'r')
+    def read_model_from_json(self, file_name):
+        json_file = open(file_name, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         self.model = tf.keras.models.model_from_json(loaded_model_json)
