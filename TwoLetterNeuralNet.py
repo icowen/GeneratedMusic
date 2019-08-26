@@ -38,7 +38,6 @@ class TwoLetterNeuralNet:
         self.number_of_epochs = number_of_epochs
         self.batch_size = batch_size
         self.set_up_model()
-        self.train()
 
     def get_training_data(self):
         global converter
@@ -65,14 +64,32 @@ class TwoLetterNeuralNet:
                            metrics=['accuracy'])
 
     def train(self):
-        # with tf.device('/device:GPU:0'):
         self.model.fit(self.x_train,
                        self.y_train,
                        epochs=self.number_of_epochs,
                        batch_size=self.batch_size)
+        self.model.save('TwoLetterNeuralNet.h5')
+        self.save_model_to_json()
 
-        val_loss, val_acc = self.model.evaluate(self.x_train, self.y_train)
-        print(f'val_loss: {val_loss}; accuracy: {val_acc}')
+    def save_model_to_json(self):
+        model_json = self.model.to_json()
+        with open('TwoLetterNeuralNet.json', 'w') as json_file:
+            json_file.write(model_json)
+        self.model.save_weights('weights.h5')
+        print('Saved model to disk')
+
+    def read_model_from_json(self):
+        json_file = open('TwoLetterNeuralNet.json', 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.model = tf.keras.models.model_from_json(loaded_model_json)
+        self.model.load_weights('weights.h5')
+        self.model.compile(optimizer='adam',
+                           loss='categorical_crossentropy',
+                           metrics=['accuracy'])
+
+    def read_model(self):
+        self.model = tf.keras.models.load_model('TwoLetterNeuralNet.h5')
 
     def generate_next_letter(self, first_letter, second_letter):
         converted_chars_to_lists = np.asarray(
@@ -103,6 +120,4 @@ class TwoLetterNeuralNet:
             result += next_letter
             first_letter = second_letter
             second_letter = ' ' if next_letter == '\' \'' else next_letter
-            print(result)
-
         return result
