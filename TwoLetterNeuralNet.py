@@ -40,14 +40,17 @@ class TwoLetterNeuralNet:
         self.number_of_epochs = number_of_epochs
         self.batch_size = batch_size
         self.save_model = save_model
-        if save_model: self.set_up_model()
-        if json_file_input: self.read_model_from_json(json_file_input)
+        if json_file_input:
+            self.read_model_from_json(json_file_input)
+        else:
+            self.set_up_model()
 
     def get_training_data(self):
         global converter
-        word_file = open(self.input_file, 'r')
+        word_file = open(self.input_file, 'r', encoding='utf8')
         words = []
         for w in word_file.readlines():
+            print(w)
             words.append(w)
         word_file.close()
         converter = WordConverter(words)
@@ -73,14 +76,14 @@ class TwoLetterNeuralNet:
                        epochs=self.number_of_epochs,
                        batch_size=self.batch_size)
         if self.save_model:
-            self.model.save('TwoLetterNeuralNet.h5')
+            self.model.save('KerasConfigurations/Aladdin.h5')
             self.save_model_to_json()
 
     def save_model_to_json(self):
         model_json = self.model.to_json()
-        with open(f'TwoLetterNeuralNet{round(time.time())}.json', 'w') as json_file:
+        with open(f'KerasConfigurations/Aladdin.json', 'w') as json_file:
             json_file.write(model_json)
-        self.model.save_weights('KerasConfigurations/weights.h5')
+        self.model.save_weights('KerasConfigurations/AladdinWeights.h5')
         print('Saved model to disk')
 
     def read_model_from_json(self, file_name):
