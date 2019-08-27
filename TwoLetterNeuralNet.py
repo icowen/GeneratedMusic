@@ -1,7 +1,5 @@
-import datetime
 import random
 import time
-
 import tensorflow as tf
 import numpy as np
 from Helpers import convert_char, convert_index_number_to_ascii_letter
@@ -32,7 +30,8 @@ class TwoLetterNeuralNet:
                  number_of_output_nodes=27,
                  number_of_epochs=10000,
                  batch_size=50,
-                 save_model=False):
+                 save_model=False,
+                 json_file_input=False):
         self.input_file = input_file
         self.x_train, self.y_train = self.get_training_data()
         self.model = tf.keras.models.Sequential()
@@ -42,6 +41,7 @@ class TwoLetterNeuralNet:
         self.batch_size = batch_size
         self.save_model = save_model
         if save_model: self.set_up_model()
+        if json_file_input: self.read_model_from_json(json_file_input)
 
     def get_training_data(self):
         global converter
@@ -80,7 +80,7 @@ class TwoLetterNeuralNet:
         model_json = self.model.to_json()
         with open(f'TwoLetterNeuralNet{round(time.time())}.json', 'w') as json_file:
             json_file.write(model_json)
-        self.model.save_weights('weights.h5')
+        self.model.save_weights('KerasConfigurations/weights.h5')
         print('Saved model to disk')
 
     def read_model_from_json(self, file_name):
@@ -88,13 +88,13 @@ class TwoLetterNeuralNet:
         loaded_model_json = json_file.read()
         json_file.close()
         self.model = tf.keras.models.model_from_json(loaded_model_json)
-        self.model.load_weights('weights.h5')
+        self.model.load_weights('KerasConfigurations/weights.h5')
         self.model.compile(optimizer='adam',
                            loss='categorical_crossentropy',
                            metrics=['accuracy'])
 
     def read_model(self):
-        self.model = tf.keras.models.load_model('TwoLetterNeuralNet.h5')
+        self.model = tf.keras.models.load_model('KerasConfigurations/TwoLetterNeuralNet.h5')
 
     def generate_next_letter(self, first_letter, second_letter):
         converted_chars_to_lists = np.asarray(
