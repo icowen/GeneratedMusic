@@ -15,7 +15,7 @@ def main():
 
 def get_notes_for_all_midis():
     outfile = open("flute_notes.txt", "w")
-    note_dict = NoteConverter.get_dict()
+    note_dict = NoteConverter.get_dict_with_number_as_key()
     file_names = glob.glob(join(dirname(__file__), "MusicFiles/", "*.mid"))
     for file in file_names:
         mid = MidiFile(file)
@@ -32,7 +32,7 @@ def get_notes_for_all_midis():
 
 
 def get_notes_for_single_midi(file_name):
-    note_dict = NoteConverter.get_dict()
+    note_dict = NoteConverter.get_dict_with_number_as_key()
     notes = []
     note_letters = []
     mid = MidiFile(file_name)

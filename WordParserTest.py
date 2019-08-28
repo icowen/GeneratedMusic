@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from WordConverter import WordConverter
+from WordParser import WordConverter
 
 
 class TestForMultipleOutputs(unittest.TestCase):

@@ -2,7 +2,7 @@ import random
 import tensorflow as tf
 import numpy as np
 from Helpers import convert_char, convert_index_number_to_ascii_letter
-from WordConverter import WordConverter
+from WordParser import WordConverter
 import sys
 
 np.set_printoptions(threshold=sys.maxsize)
