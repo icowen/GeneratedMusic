@@ -11,9 +11,6 @@ class MyTestCase(unittest.TestCase):
                      '[\'F4\', \'C5\', \'F4\']'
         self.parser = NoteParser(fake_input)
 
-    def test_get_first_note(self):
-        self.assertEqual(self.parser.songs[0][:2], 'G3')
-
     def test_get_first_note_in_array_form(self):
         expected = np.zeros((128,), dtype=int)
         expected[55] = 1

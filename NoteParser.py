@@ -1,22 +1,20 @@
 import numpy as np
 import re
-
 import NoteConverter
 
 
 class NoteParser:
     def __init__(self, input_data):
-        self.songs = self.convert_to_notes_by_song(input_data)
-        self.converted_songs = self.convert_alphabet_notes_into_array(self.songs)
+        self.input_data = input_data
+        self.converted_songs = self.convert_to_notes_by_song(input_data)
 
-    @staticmethod
-    def convert_to_notes_by_song(input_text_file):
+    def convert_to_notes_by_song(self, input_text_file):
         song_iterator = re.finditer('\[.*\]', input_text_file)
         cleaned_songs = []
         for song in song_iterator:
             clean = re.sub('[\[\'\]\s]', '', song.group())
             cleaned_songs.append(clean)
-        return cleaned_songs
+        return self.convert_alphabet_notes_into_array(cleaned_songs)
 
     def convert_alphabet_notes_into_array(self, songs):
         converted_songs = []
