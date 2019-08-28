@@ -1,23 +1,12 @@
 import random
-import time
 import tensorflow as tf
 import numpy as np
 from Helpers import convert_char, convert_index_number_to_ascii_letter
 from WordConverter import WordConverter
 import sys
-from tensorflow.python.client import device_lib
 
 np.set_printoptions(threshold=sys.maxsize)
 
-
-# def get_available_gpus():
-#     local_device_protos = device_lib.list_local_devices()
-#     return [x.name for x in local_device_protos if x.device_type == 'GPU']
-#
-#
-# print('--------------------Devices from session: ')
-# sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
-# print(f'\n---------get_available_gpus: {get_available_gpus()}')
 
 class TwoLetterNeuralNet:
     random.seed(1)
@@ -40,6 +29,10 @@ class TwoLetterNeuralNet:
         self.number_of_epochs = number_of_epochs
         self.batch_size = batch_size
         self.save_model = save_model
+        self.model_save_h5 = 'KerasConfigurations/Aladdin.h5'
+        self.weights_save_h5 = 'KerasConfigurations/AladdinWeights.h5'
+        self.model_save_json = 'KerasConfigurations/Aladdin.json'
+
         if json_file_input:
             self.read_model_from_json(json_file_input)
         else:
@@ -65,7 +58,6 @@ class TwoLetterNeuralNet:
                                              activation=tf.nn.sigmoid))
         self.model.add(tf.keras.layers.Dense(self.number_of_output_nodes,
                                              activation=tf.nn.sigmoid))
-
         self.model.compile(optimizer='adam',
                            loss='categorical_crossentropy',
                            metrics=['accuracy'])
@@ -76,42 +68,14 @@ class TwoLetterNeuralNet:
                        epochs=self.number_of_epochs,
                        batch_size=self.batch_size)
         if self.save_model:
-            self.model.save('KerasConfigurations/Aladdin.h5')
+            self.model.save(self.model_save_h5)
             self.save_model_to_json()
 
-    def save_model_to_json(self):
-        model_json = self.model.to_json()
-        with open(f'KerasConfigurations/Aladdin.json', 'w') as json_file:
-            json_file.write(model_json)
-        self.model.save_weights('KerasConfigurations/AladdinWeights.h5')
-        print('Saved model to disk')
-
-    def read_model_from_json(self, file_name):
-        json_file = open(file_name, 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        self.model = tf.keras.models.model_from_json(loaded_model_json)
-        self.model.load_weights('KerasConfigurations/weights.h5')
-        self.model.compile(optimizer='adam',
-                           loss='categorical_crossentropy',
-                           metrics=['accuracy'])
-
-    def read_model(self):
-        self.model = tf.keras.models.load_model('KerasConfigurations/TwoLetterNeuralNet.h5')
-
     def generate_next_letter(self, first_letter, second_letter):
-        converted_chars_to_lists = np.asarray(
-            np.concatenate([
-                convert_char(first_letter),
-                convert_char(second_letter)
-            ])
-        )
-        normalized_input = np.asarray(tf.keras.utils.normalize(converted_chars_to_lists))
-        predictions = self.model.predict([normalized_input[0:]])
+        normalized_input = self.get_correct_input_shape(first_letter, second_letter)
+        predictions = self.get_predictions(normalized_input)
         random_number = random.random()
         cutoff = 0
-        total = sum(predictions[0])
-        predictions = list(map(lambda x: x / total, predictions[0]))
         for i in range(len(predictions)):
             letter = predictions[i]
             cutoff += letter
@@ -129,3 +93,42 @@ class TwoLetterNeuralNet:
             first_letter = second_letter
             second_letter = ' ' if next_letter == '\' \'' else next_letter
         return result
+
+    def get_predictions(self, normalized_input):
+        return self.normalize_predictions(
+            self.model.predict([normalized_input[0:]])
+        )
+
+    @staticmethod
+    def normalize_predictions(predictions):
+        total = sum(predictions[0])
+        return list(map(lambda x: x / total, predictions[0]))
+
+    @staticmethod
+    def get_correct_input_shape(first_letter, second_letter):
+        return np.asarray(tf.keras.utils.normalize(np.asarray(
+            np.concatenate([
+                convert_char(first_letter),
+                convert_char(second_letter)
+            ])
+        )))
+
+    def save_model_to_json(self):
+        model_json = self.model.to_json()
+        with open(self.model_save_json, 'w') as json_file:
+            json_file.write(model_json)
+        self.model.save_weights(self.weights_save_h5)
+        print('Saved model to disk')
+
+    def read_model_from_json(self, file_name):
+        json_file = open(file_name, 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.model = tf.keras.models.model_from_json(loaded_model_json)
+        self.model.load_weights(self.weights_save_h5)
+        self.model.compile(optimizer='adam',
+                           loss='categorical_crossentropy',
+                           metrics=['accuracy'])
+
+    def read_model(self):
+        self.model = tf.keras.models.load_model(self.model_save_h5)

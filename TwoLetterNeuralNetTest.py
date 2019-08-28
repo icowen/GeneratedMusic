@@ -1,5 +1,3 @@
-import sys
-import time
 import unittest
 from TwoLetterNeuralNet import TwoLetterNeuralNet
 
@@ -9,7 +7,6 @@ class MyTestCase(unittest.TestCase):
         self.net = TwoLetterNeuralNet(input_file='aladdin.txt',
                                       number_of_epochs=10000,
                                       save_model=True)
-        # self.net.read_model_from_json('KerasConfigurations/TwoLetterNeuralNet20000Trials.json')
         self.net.train()
         self.result = self.net.generate_words(998, 'a', 't')
 
