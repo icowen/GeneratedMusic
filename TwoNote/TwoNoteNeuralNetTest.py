@@ -8,6 +8,7 @@ class MyTestCase(unittest.TestCase):
         self.net.train()
 
     def test_set_up(self):
+        self.net.predict()
         self.assertTrue(True)
 
 
