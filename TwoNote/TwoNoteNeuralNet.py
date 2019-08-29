@@ -1,7 +1,8 @@
 import random
+import pysynth
 import tensorflow as tf
 import numpy as np
-
+from playsound import playsound
 from TwoNote import NoteConverter
 from TwoNote.NoteParser import NoteParser
 
@@ -46,21 +47,29 @@ class TwoNoteNeuralNet:
         return first_notes_by_song, next_notes_by_song
 
     def train(self):
-        for epoch in range(self.number_of_epochs):
-            for x, y in zip(self.x_train[:10], self.y_train[:10]):
-                self.model.fit(x,
-                               y,
-                               epochs=self.number_of_epochs,
-                               batch_size=self.batch_size)
+        self.model.fit(self.x_train[0],
+                       self.y_train[0],
+                       epochs=self.number_of_epochs,
+                       batch_size=self.batch_size)
         if self.save_model:
             self.model.save(self.model_save_h5)
             self.save_model_to_json()
 
     def predict(self):
-        for i in range(25):
-            print(f'Predicted: '
-                  f'{self.generate_next_note(self.x_train[0][i])}; '
-                  f'Acutal: {NoteParser.convert_array_into_note(self.y_train[0][i])}')
+        song_input = self.x_train[0]
+        new_song = []
+        for i in range(len(song_input)):
+            predicted = self.generate_next_note(song_input[i]).lower()
+            predicted_ = (predicted, 4)
+            new_song.append(predicted_)
+            print(predicted_)
+            actual = NoteParser.convert_array_into_note(self.y_train[0][i])
+            # print(f'Predicted: '
+            #       f'{predicted}; '
+            #       f'Acutal: {actual}')
+        print(new_song)
+        pysynth.make_wav(new_song, fn="test.wav")
+        playsound('test.wav')
 
     def generate_next_note(self, notes):
         normalized_input = self.get_correct_input_shape(notes)
@@ -71,6 +80,10 @@ class TwoNoteNeuralNet:
             note = predictions[i]
             cutoff += note
             if random_number <= cutoff:
+                if i < 21:
+                    return NoteConverter.get_dict_with_number_as_key()[i+24]
+                if i > 108:
+                    return NoteConverter.get_dict_with_number_as_key()[i-24]
                 return NoteConverter.get_dict_with_number_as_key()[i]
 
     @staticmethod
@@ -93,4 +106,3 @@ class TwoNoteNeuralNet:
             json_file.write(model_json)
         self.model.save_weights(self.weights_save_h5)
         print('Saved model to disk')
-
