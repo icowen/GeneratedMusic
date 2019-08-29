@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from WordParser import WordConverter
+from TwoLetterNeuralNet.WordParser import WordConverter
 
 
 class TestForMultipleOutputs(unittest.TestCase):

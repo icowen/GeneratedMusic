@@ -2,7 +2,7 @@ import random
 import tensorflow as tf
 import numpy as np
 from Helpers import convert_char, convert_index_number_to_ascii_letter
-from WordParser import WordConverter
+from TwoLetterNeuralNet.WordParser import WordConverter
 import sys
 
 np.set_printoptions(threshold=sys.maxsize)
@@ -29,9 +29,9 @@ class TwoLetterNeuralNet:
         self.number_of_epochs = number_of_epochs
         self.batch_size = batch_size
         self.save_model = save_model
-        self.model_save_h5 = 'KerasConfigurations/Aladdin.h5'
-        self.weights_save_h5 = 'KerasConfigurations/AladdinWeights.h5'
-        self.model_save_json = 'KerasConfigurations/Aladdin.json'
+        self.model_save_h5 = 'TwoLetterNeuralNet/Aladdin.h5'
+        self.weights_save_h5 = 'TwoLetterNeuralNet/AladdinWeights.h5'
+        self.model_save_json = 'TwoLetterNeuralNet/Aladdin.json'
 
         if json_file_input:
             self.read_model_from_json(json_file_input)

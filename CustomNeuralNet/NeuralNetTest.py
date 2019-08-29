@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 from Helpers import ActivationFunction
 from CustomNeuralNet.NeuralNet import NeuralNet
-from WordParser import WordConverter
+from TwoLetterNeuralNet.WordParser import WordConverter
 
 
 @patch('builtins.print')

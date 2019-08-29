@@ -1,5 +1,5 @@
 import unittest
-from TwoLetterNeuralNet import TwoLetterNeuralNet
+from TwoLetterNeuralNet.TwoLetterNeuralNet import TwoLetterNeuralNet
 
 
 class MyTestCase(unittest.TestCase):
