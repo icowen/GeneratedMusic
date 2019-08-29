@@ -32,6 +32,12 @@ class MyTestCase(unittest.TestCase):
         actual = self.parser.next_notes[0][0]
         np.testing.assert_array_equal(actual, next_note)
 
+    def test_convert_array_into_note(self):
+        next_note = np.zeros((128,), dtype=int)
+        next_note[57] = 1
+        converted = self.parser.convert_array_into_note(next_note)
+        self.assertEqual(converted, 'A3')
+
 
 if __name__ == '__main__':
     unittest.main()

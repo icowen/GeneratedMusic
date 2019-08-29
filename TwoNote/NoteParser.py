@@ -1,6 +1,6 @@
 import numpy as np
 import re
-import NoteConverter
+from TwoNote import NoteConverter
 
 
 class NoteParser:
@@ -53,3 +53,9 @@ class NoteParser:
             next_notes.append(song_next_notes)
         self.first_two_notes = first_two_notes
         self.next_notes = next_notes
+
+    @staticmethod
+    def convert_array_into_note(note):
+        index = np.argmax(note)
+        next_note = NoteConverter.get_dict_with_number_as_key().get(index)
+        return next_note

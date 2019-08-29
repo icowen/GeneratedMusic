@@ -1,7 +1,7 @@
 import binascii
 import re
 from mido import MidiFile
-import NoteConverter
+from TwoNote import NoteConverter
 from os.path import dirname, join
 import glob
 
