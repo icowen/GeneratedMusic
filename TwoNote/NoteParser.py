@@ -4,12 +4,13 @@ from TwoNote import NoteConverter
 
 
 class NoteParser:
-    def __init__(self, input_data):
+    def __init__(self,
+                 input_data,
+                 number_of_initial_notes=2):
         self.input_data = input_data
         self.converted_songs = self.convert_to_notes_by_song(input_data)
-        self.convert_into_keras_input_lists()
-        self.first_two_notes, self.next_notes = \
-            self.convert_into_keras_input_lists()
+        self.first_notes, self.next_notes = \
+            self.convert_into_keras_input_lists(number_of_initial_notes)
 
     def convert_to_notes_by_song(self, input_text_file):
         song_iterator = re.finditer('\[.*\]', input_text_file)
@@ -35,23 +36,23 @@ class NoteParser:
         note_as_array[index] = 1
         return np.asarray(note_as_array)
 
-    def convert_into_keras_input_lists(self):
-        first_two_notes = []
+    def convert_into_keras_input_lists(self, number_of_initial_notes):
+        first_notes = []
         next_notes = []
         for song in self.converted_songs:
             song_first_notes = []
             song_next_notes = []
-            for i in range(len(song) - 2):
+            for i in range(len(song) - number_of_initial_notes):
+                notes = np.empty((0, ))
+                for j in range(number_of_initial_notes):
+                    notes = np.concatenate([notes, np.asarray(song[i+j])])
                 song_first_notes.append(np.asarray(
-                    np.concatenate([
-                        song[i],
-                        song[i + 1]
-                    ]))
-                )
-                song_next_notes.append(song[i + 2])
-            first_two_notes.append(np.asarray(song_first_notes))
+                    notes
+                ))
+                song_next_notes.append(song[i + number_of_initial_notes])
+            first_notes.append(np.asarray(song_first_notes))
             next_notes.append(np.asarray(song_next_notes))
-        return np.asarray(first_two_notes), np.asarray(next_notes)
+        return np.asarray(first_notes), np.asarray(next_notes)
 
     @staticmethod
     def convert_array_into_note(note):

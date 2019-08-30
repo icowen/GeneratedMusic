@@ -41,7 +41,7 @@ class TwoNoteNeuralNet:
     def get_training_data(self):
         note_file = open(self.input_file, 'r')
         parser = NoteParser(note_file.read())
-        first_notes_by_song = parser.first_two_notes
+        first_notes_by_song = parser.first_notes
         next_notes_by_song = parser.next_notes
         note_file.close()
         return first_notes_by_song, next_notes_by_song
@@ -62,7 +62,6 @@ class TwoNoteNeuralNet:
             predicted = self.generate_next_note(song_input[i]).lower()
             predicted_ = (predicted, 4)
             new_song.append(predicted_)
-            print(predicted_)
             actual = NoteParser.convert_array_into_note(self.y_train[0][i])
             # print(f'Predicted: '
             #       f'{predicted}; '
