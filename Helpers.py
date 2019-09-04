@@ -1,5 +1,7 @@
 import numpy as np
 from enum import Enum
+import re
+from string import ascii_lowercase
 
 
 def normalize(output_probabilities):
@@ -65,3 +67,46 @@ class ActivationFunction(Enum):
     def __init__(self, loss_function, derivative):
         self.loss_function = loss_function
         self.derivative = derivative
+
+
+def letter_dict(index):
+    letters_dict = dict()
+    for c in ascii_lowercase:
+        letters_dict[get_index_for_char_array(c)] = c
+    if index in letters_dict.keys():
+        return letters_dict[index]
+    else:
+        return ' '
+
+
+def get_index_for_char_array(char):
+    return 26 if char == ' ' else ord(char) - 97
+
+
+def convert_char(char):
+    c = np.zeros((27,), dtype=int)
+    c[get_index_for_char_array(char)] = 1
+    return c
+
+
+def convert_list_to_ascii_by_highest_probability(letter_list):
+    index = np.argmax(letter_list)
+    return convert_index_number_to_ascii_letter(index)
+
+
+def convert_index_number_to_ascii_letter(index):
+    if index == 26:
+        return '\' \''
+    return chr(index + 97)
+
+
+def clean_word_list(word_list):
+    clean = []
+    for line in word_list:
+        for word in line.split():
+            word = re.sub('[^a-zA_Z]', '', word.lower())
+            word = re.sub('([\s])', ' ', word)
+            clean.append(word)
+    return clean
+
+
