@@ -70,7 +70,8 @@ class NoteParser:
             for note in song.split('\n'):
                 note_arr = []
                 for i in note.split(','):
-                    note_arr.append(float(i))
+                    if i:
+                        note_arr.append(float(i))
                 song_arr.append(note_arr)
             data.append(song_arr)
         return np.asarray(data)
