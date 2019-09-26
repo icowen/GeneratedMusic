@@ -14,7 +14,7 @@ def convert_note_to_array(note_pitch):
 with open('flute_notes_with_volume_and_length.csv', 'w', newline='\n') as out_file:
     wr = csv.writer(out_file)
     noteConverter = NoteConverter.get_dict_with_number_as_key()
-    for song in glob.glob("C:\\Users\\ian_c\\GeneratedMusic\\MusicFiles\\*.mid"):
+    for song in glob.glob("C:\\Users\\ian_c\\GeneratedMusic\\MusicFiles\\*.mid")[:3]:
         output_notes = []
         midi_pretty_format = pretty_midi.PrettyMIDI(song)
         for instrument in midi_pretty_format.instruments:
@@ -24,4 +24,4 @@ with open('flute_notes_with_volume_and_length.csv', 'w', newline='\n') as out_fi
                 length = note.end - note.start
                 note_array.extend([volume, length])
                 wr.writerow(note_array)
-        wr.write('-')
+        wr.writerow('-')
