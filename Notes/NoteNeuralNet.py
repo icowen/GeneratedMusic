@@ -1,13 +1,20 @@
-import os
 import random
-import pysynth
-import tensorflow as tf
+# import pysynth
+import random
+import sys
+
 import numpy as np
-from midi2audio import FluidSynth
-from playsound import playsound
+# import pysynth
+import pandas as pd
+# from midi2audio import FluidSynth
+# from playsound import playsound
 import pretty_midi
+import tensorflow as tf
+
 from Notes import NoteConverter
 from Notes.NoteParser import NoteParser
+
+np.set_printoptions(threshold=sys.maxsize)
 
 
 class NoteNeuralNet:
@@ -59,8 +66,9 @@ class NoteNeuralNet:
         if self.input_file_with_notes_as_arr:
             note_file = open(self.input_file_with_notes_as_arr)
             parser = NoteParser(note_file.read(),
-                                self.number_of_previous_notes,
-                                ['volume', 'length'])
+                                self.number_of_previous_notes
+                                # ,['volume', 'length']
+                                )
         else:
             note_file = open(self.input_file, 'r')
             parser = NoteParser(note_file.read(),
@@ -68,18 +76,19 @@ class NoteNeuralNet:
         first_notes_by_song = parser.first_notes
         next_notes_by_song = parser.next_notes
         note_file.close()
+        pd.DataFrame(first_notes_by_song[0], dtype=int).to_json('input_notes.json', orient='values')
+        pd.DataFrame(next_notes_by_song[0], dtype=int).to_json('output_notes.json', orient='values')
         return first_notes_by_song, next_notes_by_song
 
     def train(self):
-        print(f'{self.input_file_with_notes_as_arr} x: {self.x_train[0]}')
-        print(f'{self.input_file_with_notes_as_arr} y: {self.y_train[0]}')
         self.model.fit(self.x_train[0],
                        self.y_train[0],
                        epochs=self.number_of_epochs,
                        batch_size=self.batch_size)
-        if self.save_model:
-            self.model.save(self.model_save_h5)
-            self.save_model_to_json()
+        # tfjs.converters.save_keras_model(self.model, "C:/Users/ian_c/music-website/src/JSModelConfiguration")
+        # if self.save_model:
+        #     self.model.save(self.model_save_h5)
+        #     self.save_model_to_json()
 
     def predict(self):
         song_input = self.x_train[0]
@@ -89,8 +98,8 @@ class NoteNeuralNet:
             note_with_duration = (predicted, 4)
             new_song.append(note_with_duration)
 
-        pysynth.make_wav(new_song, fn=self.wav_file_name)
-        playsound(self.wav_file_name)
+        # pysynth.make_wav(new_song, fn=self.wav_file_name)
+        # playsound(self.wav_file_name)
 
     def predict_with_length_and_volume(self):
         flute_chord = pretty_midi.PrettyMIDI()
@@ -99,10 +108,10 @@ class NoteNeuralNet:
         song_input = self.x_train[0]
         time = 0
         for i in range(len(song_input) - 1):
-            note_name = self.generate_next_note(song_input[i][:-2]).lower()
+            note_name = self.generate_next_note(song_input[i]).lower()
             note_number = pretty_midi.note_name_to_number(note_name)
             note_length = song_input[i][-1]
-            note_volume = song_input[i][-2]
+            note_volume = int(song_input[i][-2])
             note = pretty_midi.Note(
                 velocity=note_volume,
                 pitch=note_number,
@@ -110,14 +119,8 @@ class NoteNeuralNet:
                 end=note_length)
             time += note_length
             flute.notes.append(note)
-
         flute_chord.instruments.append(flute)
         flute_chord.write('temp.mid')
-        FluidSynth().midi_to_audio('temp.mid', self.wav_file_name)
-        # pysynth.make_wav(new_song, fn=self.wav_file_name)
-        FluidSynth().play_midi('temp.mid')
-        os.remove('temp.mid')
-        # playsound(self.wav_file_name)
 
     def generate_next_note(self, notes):
         normalized_input = self.get_correct_input_shape(notes)

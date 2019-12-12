@@ -45,7 +45,6 @@ class NoteParser:
     def convert_into_keras_input_lists(self, number_of_initial_notes):
         first_notes = []
         next_notes = []
-        print(f'self.converted_songs normal: {self.converted_songs}')
         for song in self.converted_songs:
             song_first_notes = []
             song_next_notes = []
@@ -62,7 +61,6 @@ class NoteParser:
     def convert_into_keras_input_lists_with_volume_and_length(self, number_of_initial_notes):
         first_notes = []
         next_notes = []
-        print(f'self.converted_songs: {self.converted_songs}')
         for song in self.converted_songs:
             song_first_notes = []
             song_next_notes = []
